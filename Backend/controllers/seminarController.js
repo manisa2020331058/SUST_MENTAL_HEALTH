@@ -38,3 +38,4 @@ exports.updateSeminarStatus = asyncHandler(async (req, res) => {
 
   res.json(seminar);
 });
+

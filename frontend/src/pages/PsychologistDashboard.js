@@ -7,28 +7,66 @@ import {
   FaSearch      // Search
 } from 'react-icons/fa';
 import '../styles/PsychologistDashboard.css';
-import api from '../utils/api'; // Assuming you have an api module
+import api from '../utils/api';
+import { PsychologistProfile } from './PsychologistProfile';
+
+const defaultProfile = {
+  personalInfo: {
+    name: '',
+    gender: '',
+    dateOfBirth: '',
+  },
+  professionalInfo: {
+    specialization: '',
+    qualifications: '',
+    yearsOfExperience: '',
+  },
+  contactInfo: {
+    email: '',
+    phoneNumber: '',
+    officeLocation: '',
+  },
+  availabilitySchedule: []
+};
+
+const sanitizeValue = (value) => {
+  if (value === null || value === undefined) return '';
+  return String(value).trim();
+};
 
 const PsychologistDashboard = () => {
-  // State for search and active section
-  const [searchRegistration, setSearchRegistration] = useState('');
+  // UI State
   const [activeSection, setActiveSection] = useState('overview');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Data State
+  const [profile, setProfile] = useState(defaultProfile);
+  const [upcomingSessions, setUpcomingSessions] = useState([]);
+  const [pastSessions, setPastSessions] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [seminars, setSeminars] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [newSeminar, setNewSeminar] = useState({
+    title: '',
+    description: '',
+    date: '',
+    time: '',
+    location: '',
+    maxParticipants: 50,
+    registeredParticipants: 0
+  });
 
-  // State for student enrollment
+  // Form States
   const [newStudent, setNewStudent] = useState({
-    // Personal Information
     name: '',
     gender: '',
     dateOfBirth: '',
     age: '',
-  
-    // Contact Information
     email: '',
     phoneNumber: '',
     alternatePhoneNumber: '',
     communicationPreference: '',
-  
-    // Academic Information
     registrationNumber: '',
     department: '',
     session: '',
@@ -36,249 +74,314 @@ const PsychologistDashboard = () => {
     cgpa: '',
     scholarshipStatus: ''
   });
-  
-  // State for therapy session
-  const [therapySession, setTherapySession] = useState({
-    registrationNumber: '',
-    type: '',
+
+  const [newSession, setNewSession] = useState({
+    studentId: '',
     date: '',
     time: '',
+    type: 'individual',
     description: '',
-    duration: '',
-    followUpNeeded: ''
+    duration: 60
   });
 
-  // State for seminar creation
-  const [newSeminar, setNewSeminar] = useState({
-    title: '',
-    date: '',
-    time: '',
-    location: '',
-    description: '',
-    maxParticipants: ''
-  });
-
-  // State for sessions
-  const [sessions, setSessions] = useState({
-    upcoming: [],
-    past: []
-  });
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
-  const [sessionError, setSessionError] = useState('');
-
-  // Mock data stores (to be replaced with backend integration)
-  const [studentEnrollments, setStudentEnrollments] = useState([]);
-  const [therapySessions, setTherapySessions] = useState([]);
-  const [seminars, setSeminars] = useState([]);
-
-  // Handler for student enrollment
-  const handleStudentEnrollment = (e) => {
-    e.preventDefault();
-    const enrolledStudent = {
-      ...newStudent,
-      id: studentEnrollments.length + 1
-    };
-    
-    setStudentEnrollments([...studentEnrollments, enrolledStudent]);
-    
-    // Reset form
-    setNewStudent({
-      name: '',
-      registrationNumber: '',
-      department: '',
-      session: '',
-      gender: '',
-      age: '',
-      email: '',
-      phoneNumber: '',
-      currentYear: '',
-      communicationPreference: ''
-    });
-
-    // TODO: Send to backend
-    alert('Student Enrolled Successfully');
-  };
-
-  // Handler for therapy session scheduling
-  const handleScheduleTherapySession = (e) => {
-    e.preventDefault();
-    const sessionToSchedule = {
-      ...therapySession,
-      id: therapySessions.length + 1
-    };
-
-    setTherapySessions([...therapySessions, sessionToSchedule]);
-
-    // Reset form
-    setTherapySession({
-      registrationNumber: '',
-      type: '',
-      date: '',
-      time: '',
-      description: '',
-      duration: '',
-      followUpNeeded: ''
-    });
-
-    // TODO: Send to backend
-    alert('Therapy Session Scheduled Successfully');
-  };
-
-  // Handler for seminar creation
-  const handleSeminarCreate = (e) => {
-    e.preventDefault();
-    const seminarToAdd = {
-      ...newSeminar,
-      id: seminars.length + 1
-    };
-
-    setSeminars([...seminars, seminarToAdd]);
-
-    // Reset form
-    setNewSeminar({
-      title: '',
-      date: '',
-      time: '',
-      location: '',
-      description: '',
-      maxParticipants: ''
-    });
-
-    // TODO: Send to backend
-    alert('Seminar Created Successfully');
-  };
-
-  // Search handler
-  const handleSearch = () => {
-    // TODO: Implement search logic
-    // This could be a call to backend to find student by registration number
-    const foundStudent = studentEnrollments.find(
-      student => student.registrationNumber === searchRegistration
-    );
-
-    if (foundStudent) {
-      // Maybe set a selected student state or navigate to student details
-      console.log('Student Found:', foundStudent);
-    } else {
-      alert('No student found with this registration number');
-    }
-  };
-
-  // Fetch sessions
   useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        // Fetch upcoming sessions
-        const upcomingResponse = await api.get('/sessions/psychologist?timeframe=upcoming');
-        // Fetch past sessions
-        const pastResponse = await api.get('/sessions/psychologist?timeframe=past');
-
-        setSessions({
-          upcoming: upcomingResponse.data,
-          past: pastResponse.data
-        });
-      } catch (error) {
-        console.error('Error fetching sessions:', error);
-      }
-    };
-
-    fetchSessions();
+    fetchPsychologistData();
   }, []);
 
-  // Handle session scheduling
-  const handleScheduleSession = async (studentId) => {
+  useEffect(() => {
+    if (activeSection === 'sessions') {
+      fetchSessions();
+    } else if (activeSection === 'students') {
+      fetchStudents();
+    } else if (activeSection === 'seminars') {
+      fetchSeminars();
+    }
+  }, [activeSection]);
+
+  const fetchPsychologistData = async () => {
     try {
-      if (!selectedTimeSlot) {
-        setSessionError('Please select a time slot');
-        return;
+      setLoading(true);
+      const response = await api.profile.get();
+      
+      if (!response || !response.data) {
+        throw new Error('No profile data received');
       }
 
-      const response = await api.post('/sessions', {
-        studentId,
-        date: selectedDate.toISOString().split('T')[0],
-        startTime: selectedTimeSlot
-      });
+      const data = response.data;
+      
+      // Sanitize and structure the profile data
+      const sanitizedProfile = {
+        personalInfo: {
+          name: sanitizeValue(data.personalInfo?.name),
+          gender: sanitizeValue(data.personalInfo?.gender),
+          dateOfBirth: sanitizeValue(data.personalInfo?.dateOfBirth),
+        },
+        professionalInfo: {
+          specialization: sanitizeValue(data.professionalInfo?.specialization),
+          qualifications: sanitizeValue(data.professionalInfo?.qualifications),
+          yearsOfExperience: sanitizeValue(data.professionalInfo?.yearsOfExperience),
+        },
+        contactInfo: {
+          email: sanitizeValue(data.contactInfo?.email),
+          phoneNumber: sanitizeValue(data.contactInfo?.phoneNumber),
+          officeLocation: sanitizeValue(data.contactInfo?.officeLocation),
+        },
+        availabilitySchedule: Array.isArray(data.availabilitySchedule) 
+          ? data.availabilitySchedule.map(slot => ({
+              day: sanitizeValue(slot.day),
+              startTime: sanitizeValue(slot.startTime),
+              endTime: sanitizeValue(slot.endTime)
+            }))
+          : []
+      };
 
-      // Update sessions list
-      setSessions(prev => ({
-        ...prev,
-        upcoming: [...prev.upcoming, response.data]
-      }));
-
-      setSessionError('');
-    } catch (error) {
-      setSessionError(error.response?.data?.message || 'Failed to schedule session');
+      setProfile(sanitizedProfile);
+      setError(null);
+    } catch (err) {
+      console.error('Profile fetch error:', err);
+      setError('Error fetching profile: ' + (err.response?.data?.message || err.message));
+      setProfile(defaultProfile);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Render session card
-  const renderSessionCard = (session) => (
-    <div key={session._id} className="session-card">
-      <div className="session-header">
-        <h4>{session.student.personalInfo.name}</h4>
-        <span className={`status-badge ${session.status}`}>
-          {session.status}
-        </span>
-      </div>
-      <div className="session-time">
-        <p>
-          <strong>Date:</strong> {new Date(session.sessionDetails.date).toLocaleDateString()}
-        </p>
-        <p>
-          <strong>Time:</strong> {session.sessionDetails.startTime} - {session.sessionDetails.endTime}
-        </p>
-      </div>
-      <div className="student-info">
-        <p><strong>Department:</strong> {session.student.academicInfo.department}</p>
-        <p><strong>Registration:</strong> {session.student.academicInfo.registrationNumber}</p>
-      </div>
-      {session.notes && (
-        <div className="session-notes">
-          <p><strong>Notes:</strong> {session.notes}</p>
-        </div>
-      )}
-      {session.status === 'scheduled' && (
-        <div className="session-actions">
-          <button onClick={() => handleUpdateStatus(session._id, 'completed')}>
-            Mark Complete
-          </button>
-          <button onClick={() => handleUpdateStatus(session._id, 'cancelled')}>
-            Cancel
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  const fetchSessions = async () => {
+    try {
+      setLoading(true);
+      const [upcomingRes, pastRes] = await Promise.all([
+        api.sessions.getUpcoming(),
+        api.sessions.getPast()
+      ]);
+      
+      if (!upcomingRes.data || !pastRes.data) {
+        throw new Error('Failed to fetch sessions data');
+      }
+      
+      setUpcomingSessions(upcomingRes.data);
+      setPastSessions(pastRes.data);
+      setError(null);
+    } catch (err) {
+      setError('Error fetching sessions: ' + (err.response?.data?.message || err.message));
+      setUpcomingSessions([]);
+      setPastSessions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Render Sections
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+      const response = await api.students.getAll();
+      setStudents(response.data);
+      setError(null);
+    } catch (err) {
+      setError('Error fetching students: ' + (err.response?.data?.message || err.message));
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSeminars = async () => {
+    try {
+      setLoading(true);
+      const response = await api.seminars.getAll();
+      if (!response.data) {
+        throw new Error('No seminars data received');
+      }
+      setSeminars(response.data);
+      setError(null);
+    } catch (err) {
+      setError('Error fetching seminars: ' + (err.response?.data?.message || err.message));
+      setSeminars([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateSession = async (e) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!newSession.studentId || !newSession.date || !newSession.time) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await api.sessions.create(newSession);
+      await fetchSessions();
+      setNewSession({
+        studentId: '',
+        date: '',
+        time: '',
+        type: 'individual',
+        description: '',
+        duration: 60
+      });
+      setError(null);
+    } catch (err) {
+      setError('Error creating session: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEnrollStudent = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await api.students.enroll(newStudent);
+      fetchStudents();
+      setNewStudent({
+        name: '',
+        gender: '',
+        dateOfBirth: '',
+        age: '',
+        email: '',
+        phoneNumber: '',
+        alternatePhoneNumber: '',
+        communicationPreference: '',
+        registrationNumber: '',
+        department: '',
+        session: '',
+        currentYear: '',
+        cgpa: '',
+        scholarshipStatus: ''
+      });
+      setError(null);
+    } catch (err) {
+      setError('Error enrolling student: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateSession = async (sessionId, status) => {
+    try {
+      setLoading(true);
+      await api.sessions.updateStatus(sessionId, { status });
+      fetchSessions();
+      setError(null);
+    } catch (err) {
+      setError('Error updating session: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddNotes = async (sessionId, notes) => {
+    try {
+      setLoading(true);
+      await api.sessions.addNotes(sessionId, { notes });
+      fetchSessions();
+      setError(null);
+    } catch (err) {
+      setError('Error adding notes: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProfileUpdate = async (updatedProfile, onSuccess) => {
+    try {
+      setLoading(true);
+      // Ensure the updated profile data is properly sanitized before sending
+      const sanitizedProfile = {
+        personalInfo: {
+          name: sanitizeValue(updatedProfile.personalInfo?.name),
+          gender: sanitizeValue(updatedProfile.personalInfo?.gender),
+          dateOfBirth: sanitizeValue(updatedProfile.personalInfo?.dateOfBirth),
+        },
+        professionalInfo: {
+          specialization: sanitizeValue(updatedProfile.professionalInfo?.specialization),
+          qualifications: sanitizeValue(updatedProfile.professionalInfo?.qualifications),
+          yearsOfExperience: sanitizeValue(updatedProfile.professionalInfo?.yearsOfExperience),
+        },
+        contactInfo: {
+          email: sanitizeValue(updatedProfile.contactInfo?.email),
+          phoneNumber: sanitizeValue(updatedProfile.contactInfo?.phoneNumber),
+          officeLocation: sanitizeValue(updatedProfile.contactInfo?.officeLocation),
+        },
+        availabilitySchedule: Array.isArray(updatedProfile.availabilitySchedule) 
+          ? updatedProfile.availabilitySchedule.map(slot => ({
+              day: sanitizeValue(slot.day),
+              startTime: sanitizeValue(slot.startTime),
+              endTime: sanitizeValue(slot.endTime)
+            }))
+          : []
+      };
+
+      await api.profile.update(sanitizedProfile);
+      await fetchPsychologistData();
+      if (typeof onSuccess === 'function') {
+        onSuccess();
+      }
+      setError(null);
+    } catch (err) {
+      console.error('Profile update error:', err);
+      setError('Error updating profile: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateSeminar = async (e) => {
+    e.preventDefault();
+    
+    if (!newSeminar.title || !newSeminar.date || !newSeminar.time) {
+      setError('Please fill in all required fields for the seminar');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await api.seminars.create(newSeminar);
+      await fetchSeminars();
+      setNewSeminar({
+        title: '',
+        description: '',
+        date: '',
+        time: '',
+        location: '',
+        maxParticipants: 50,
+        registeredParticipants: 0
+      });
+      setError(null);
+    } catch (err) {
+      setError('Error creating seminar: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderOverview = () => (
     <div className="overview-section">
       <h2>Dashboard Overview</h2>
       <div className="overview-cards">
         <div className="overview-card">
           <h3>Total Students</h3>
-          <p>{studentEnrollments.length}</p>
+          <p>{students?.length || 0}</p>
         </div>
         <div className="overview-card">
           <h3>Upcoming Sessions</h3>
-          <p>{therapySessions.length}</p>
+          <p>{upcomingSessions?.length || 0}</p>
         </div>
         <div className="overview-card">
           <h3>Seminars</h3>
-          <p>{seminars.length}</p>
+          <p>{seminars?.length || 0}</p>
         </div>
       </div>
     </div>
   );
 
-  // Render methods for each section (Student Enrollment, Therapy Session, Seminars)
-  // ... (Use the detailed forms from the previous response)
-  // I'll include the student enrollment form as an example
   const renderStudentEnrollment = () => (
     <div className="student-enrollment-section">
       <h2>Student Enrollment</h2>
-      <form onSubmit={handleStudentEnrollment}>
+      <form onSubmit={handleEnrollStudent}>
         {/* Personal Information */}
         <div className="form-section">
           <h3>Personal Information</h3>
@@ -475,102 +578,232 @@ const PsychologistDashboard = () => {
     </div>
   );
 
-  // Main Sidebar
-  const renderSidebar = () => (
-    <div className="dashboard-sidebar">
-      <div className="search-container">
-        <input 
-          type="text" 
-          placeholder="Search by Registration Number"
-          value={searchRegistration}
-          onChange={(e) => setSearchRegistration(e.target.value)}
-        />
-        <button onClick={handleSearch}>
-          <FaSearch />
-        </button>
+  const renderSessions = () => (
+    <div className="sessions-container">
+      <div className="dashboard-section">
+        <h2>Upcoming Sessions</h2>
+        <div className="sessions-grid">
+          {upcomingSessions.map((session, index) => (
+            <div key={index} className="session-card">
+              <div className="session-header">
+                <h4>{session.student.name}</h4>
+                <span className={`status-badge ${session.status}`}>
+                  {session.status}
+                </span>
+              </div>
+              <div className="session-time">
+                <p>
+                  <strong>Date:</strong> {new Date(session.date).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Time:</strong> {session.time}
+                </p>
+              </div>
+              <div className="student-info">
+                <p><strong>Department:</strong> {session.student.department}</p>
+                <p><strong>Registration:</strong> {session.student.registrationNumber}</p>
+              </div>
+              {session.notes && (
+                <div className="session-notes">
+                  <p><strong>Notes:</strong> {session.notes}</p>
+                </div>
+              )}
+              {session.status === 'scheduled' && (
+                <div className="session-actions">
+                  <button onClick={() => handleUpdateSession(session.id, 'completed')}>
+                    Mark Complete
+                  </button>
+                  <button onClick={() => handleUpdateSession(session.id, 'cancelled')}>
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="sidebar-menu">
-        <button 
-          onClick={() => setActiveSection('overview')}
-          className={activeSection === 'overview' ? 'active' : ''}
-        >
-          <FaChartLine /> Overview
-        </button>
-        <button 
-          onClick={() => setActiveSection('studentEnrollment')}
-          className={activeSection === 'studentEnrollment' ? 'active' : ''}
-        >
-          <FaUser /> Student Enrollment
-        </button>
-        <button 
-          onClick={() => setActiveSection('therapySchedule')}
-          className={activeSection === 'therapySchedule' ? 'active' : ''}
-        >
-          <FaCalendar /> Therapy Schedule
-        </button>
-        <button 
-          onClick={() => setActiveSection('seminars')}
-          className={activeSection === 'seminars' ? 'active' : ''}
-        >
-          <FaClipboardList /> Seminars
-        </button>
-        <button 
-          onClick={() => setActiveSection('sessions')}
-          className={activeSection === 'sessions' ? 'active' : ''}
-        >
-          Sessions
-        </button>
+      <div className="dashboard-section">
+        <h2>Past Sessions</h2>
+        <div className="sessions-grid">
+          {pastSessions.map((session, index) => (
+            <div key={index} className="session-card">
+              <div className="session-header">
+                <h4>{session.student.name}</h4>
+                <span className={`status-badge ${session.status}`}>
+                  {session.status}
+                </span>
+              </div>
+              <div className="session-time">
+                <p>
+                  <strong>Date:</strong> {new Date(session.date).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Time:</strong> {session.time}
+                </p>
+              </div>
+              <div className="student-info">
+                <p><strong>Department:</strong> {session.student.department}</p>
+                <p><strong>Registration:</strong> {session.student.registrationNumber}</p>
+              </div>
+              {session.notes && (
+                <div className="session-notes">
+                  <p><strong>Notes:</strong> {session.notes}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 
-  // Content Rendering
+  const renderSeminars = () => (
+    <div className="seminars-section">
+      <h2>Seminars</h2>
+      
+      <form onSubmit={handleCreateSeminar} className="create-seminar-form">
+        <h3>Create New Seminar</h3>
+        <div className="form-row">
+          <div className="form-group">
+            <label>Title</label>
+            <input
+              type="text"
+              value={newSeminar.title}
+              onChange={(e) => setNewSeminar({...newSeminar, title: e.target.value})}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Description</label>
+            <textarea
+              value={newSeminar.description}
+              onChange={(e) => setNewSeminar({...newSeminar, description: e.target.value})}
+              required
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>Date</label>
+            <input
+              type="date"
+              value={newSeminar.date}
+              onChange={(e) => setNewSeminar({...newSeminar, date: e.target.value})}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Time</label>
+            <input
+              type="time"
+              value={newSeminar.time}
+              onChange={(e) => setNewSeminar({...newSeminar, time: e.target.value})}
+              required
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>Location</label>
+            <input
+              type="text"
+              value={newSeminar.location}
+              onChange={(e) => setNewSeminar({...newSeminar, location: e.target.value})}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Maximum Participants</label>
+            <input
+              type="number"
+              value={newSeminar.maxParticipants}
+              onChange={(e) => setNewSeminar({...newSeminar, maxParticipants: parseInt(e.target.value)})}
+              min="1"
+              required
+            />
+          </div>
+        </div>
+
+        <button type="submit" className="create-seminar-btn">Create Seminar</button>
+      </form>
+
+      <div className="seminars-list">
+        <h3>Upcoming Seminars</h3>
+        {seminars.length > 0 ? (
+          <div className="seminar-cards">
+            {seminars.map((seminar) => (
+              <div key={seminar._id} className="seminar-card">
+                <h4>{seminar.title}</h4>
+                <p>{seminar.description}</p>
+                <div className="seminar-details">
+                  <p><strong>Date:</strong> {new Date(seminar.date).toLocaleDateString()}</p>
+                  <p><strong>Time:</strong> {seminar.time}</p>
+                  <p><strong>Location:</strong> {seminar.location}</p>
+                  <p><strong>Participants:</strong> {seminar.registeredParticipants}/{seminar.maxParticipants}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>No seminars scheduled</p>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderSidebar = () => (
+    <nav className="dashboard-nav">
+      <ul>
+        <li className={activeSection === 'overview' ? 'active' : ''}>
+          <button onClick={() => setActiveSection('overview')}>
+            <FaChartLine /> Overview
+          </button>
+        </li>
+        <li className={activeSection === 'profile' ? 'active' : ''}>
+          <button onClick={() => setActiveSection('profile')}>
+            <FaUser /> Profile
+          </button>
+        </li>
+        <li className={activeSection === 'sessions' ? 'active' : ''}>
+          <button onClick={() => setActiveSection('sessions')}>
+            <FaCalendar /> Sessions
+          </button>
+        </li>
+        <li className={activeSection === 'students' ? 'active' : ''}>
+          <button onClick={() => setActiveSection('students')}>
+            <FaClipboardList /> Students
+          </button>
+        </li>
+        <li className={activeSection === 'seminars' ? 'active' : ''}>
+          <button onClick={() => setActiveSection('seminars')}>
+            <FaClipboardList /> Seminars
+          </button>
+        </li>
+      </ul>
+    </nav>
+  );
+
   const renderContent = () => {
     switch(activeSection) {
       case 'overview':
         return renderOverview();
-      case 'studentEnrollment':
+      case 'students':
         return renderStudentEnrollment();
-      case 'therapySchedule':
-        // Add therapy session scheduling render method
-        return <div>Therapy Schedule Content</div>;
-      case 'seminars':
-        // Add seminar creation render method
-        return <div>Seminars Content</div>;
       case 'sessions':
+        return renderSessions();
+      case 'seminars':
+        return renderSeminars();
+      case 'profile':
         return (
-          <div className="sessions-container">
-            <div className="dashboard-section">
-              <h2>Upcoming Sessions</h2>
-              <div className="sessions-grid">
-                {Object.entries(sessions.upcoming).map(([date, dateSessions]) => (
-                  <div key={date} className="date-group">
-                    <h3>{new Date(date).toLocaleDateString()}</h3>
-                    {dateSessions.map(renderSessionCard)}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="dashboard-section">
-              <h2>Past Sessions</h2>
-              <div className="sessions-grid">
-                {Object.entries(sessions.past).map(([date, dateSessions]) => (
-                  <div key={date} className="date-group">
-                    <h3>{new Date(date).toLocaleDateString()}</h3>
-                    {dateSessions.map(renderSessionCard)}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {sessionError && (
-              <div className="error-message">
-                {sessionError}
-              </div>
-            )}
-          </div>
+          <PsychologistProfile
+            profile={profile}
+            loading={false}
+            error={error}
+            onProfileUpdate={handleProfileUpdate}
+          />
         );
       default:
         return renderOverview();
@@ -579,10 +812,63 @@ const PsychologistDashboard = () => {
 
   return (
     <div className="psychologist-dashboard">
-      {renderSidebar()}
-      <div className="dashboard-content">
-        {renderContent()}
-      </div>
+      <nav className="dashboard-nav">
+        <ul>
+          <li className={activeSection === 'overview' ? 'active' : ''}>
+            <button onClick={() => setActiveSection('overview')}>
+              <FaChartLine /> Overview
+            </button>
+          </li>
+          <li className={activeSection === 'profile' ? 'active' : ''}>
+            <button onClick={() => setActiveSection('profile')}>
+              <FaUser /> Profile
+            </button>
+          </li>
+          <li className={activeSection === 'sessions' ? 'active' : ''}>
+            <button onClick={() => setActiveSection('sessions')}>
+              <FaCalendar /> Sessions
+            </button>
+          </li>
+          <li className={activeSection === 'students' ? 'active' : ''}>
+            <button onClick={() => setActiveSection('students')}>
+              <FaClipboardList /> Students
+            </button>
+          </li>
+          <li className={activeSection === 'seminars' ? 'active' : ''}>
+            <button onClick={() => setActiveSection('seminars')}>
+              <FaClipboardList /> Seminars
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <main className="dashboard-content">
+        {error && (
+          <div className="error-banner">
+            {error}
+            <button onClick={() => setError(null)}>✕</button>
+          </div>
+        )}
+        
+        {loading && <div className="loading-spinner">Loading...</div>}
+        
+        {!loading && (
+          <>
+            {activeSection === 'overview' && renderOverview()}
+            {activeSection === 'profile' && (
+              <PsychologistProfile
+                profile={profile}
+                loading={false}
+                error={error}
+                onProfileUpdate={handleProfileUpdate}
+              />
+            )}
+            {activeSection === 'sessions' && renderSessions()}
+            {activeSection === 'students' && renderStudentEnrollment()}
+            {activeSection === 'seminars' && renderSeminars()}
+          </>
+        )}
+      </main>
     </div>
   );
 };

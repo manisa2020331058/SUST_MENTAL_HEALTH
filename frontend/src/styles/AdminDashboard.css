@@ -1,0 +1,230 @@
+/* src/pages/AdminDashboard.css */
+:root {
+  --primary-color: #3498db;
+  --secondary-color: #2ecc71;
+  --background-light: #f7f9fc;
+  --text-dark: #2c3e50;
+  --border-color: #e0e4e8;
+  --hover-color: #2980b9;
+  --danger-color: #e74c3c;
+  --success-color: #2ecc71;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Arial', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--background-light);
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+.admin-dashboard {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--background-light);
+}
+
+.sidebar {
+  width: 250px;
+  background-color: rgba(107, 114, 119, 0.1);
+  box-shadow: 0 4px 6px rgba(26, 24, 24, 0.1);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-color);
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-header img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 15px;
+}
+
+.sidebar-header h1 {
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.sidebar button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  background-color: white;
+  border: none;
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  color: var(--text-dark);
+  font-weight: 700;
+  transition: all 0.3s ease;
+  font-family: 'Arial';
+}
+
+.sidebar button:hover {
+  background-color: rgba(3, 50, 97, 0.1);
+  color: var(--primary-color);
+}
+
+.sidebar button.active {
+  background-color: rgba(2, 46, 90, 0.2);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.sidebar button i {
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 30px;
+  background-color: var(--background-light);
+  overflow-y: auto;
+}
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.content-header h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.content-header .actions {
+  display: flex;
+  gap: 10px;
+}
+
+.data-table {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+table th {
+  background-color: #f1f5f9;
+  color: var(--text-dark);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  padding: 15px;
+  text-align: left;
+}
+
+table td {
+  padding: 15px;
+  border-top: 1px solid var(--border-color);
+}
+
+table tr:hover {
+  background-color: rgba(46, 134, 222, 0.05);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 15px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  gap: 8px;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: var(--hover-color);
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: white;
+  border: none;
+}
+
+.btn-danger:hover {
+  background-color: #c0392b;
+}
+
+.btn-success {
+  background-color: var(--success-color);
+  color: white;
+  border: none;
+}
+
+.btn-success:hover {
+  background-color: #27ae60;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .admin-dashboard {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .sidebar button {
+    flex-shrink: 0;
+  }
+
+  .main-content {
+    padding: 15px;
+  }
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-active {
+  background-color: rgba(46, 222, 104, 0.2);
+  color: #2ecc71;
+}
+
+.status-suspended {
+  background-color: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+}

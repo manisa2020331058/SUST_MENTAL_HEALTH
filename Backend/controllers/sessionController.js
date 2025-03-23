@@ -6,224 +6,136 @@ const Psychologist = require('../models/Psychologist');
 
 // Create a new session
 exports.createSession = asyncHandler(async (req, res) => {
-  const { studentId, date, startTime } = req.body;
+  const { studentId, date, time, type, description, duration } = req.body;
 
-  // Calculate end time (2 hours after start time)
-  const startDateTime = new Date(`${date}T${startTime}`);
-  const endDateTime = new Date(startDateTime.getTime() + (2 * 60 * 60 * 1000));
-  const endTime = endDateTime.toTimeString().slice(0, 5);
+  // Validate student exists
+  const student = await Student.findById(studentId);
+  if (!student) {
+    res.status(404);
+    throw new Error('Student not found');
+  }
 
-  // Check for overlapping sessions
-  const hasOverlap = await Session.checkOverlap(
-    req.user._id,
-    date,
-    startTime,
-    endTime
-  );
-
-  if (hasOverlap) {
-    return res.status(400).json({
-      message: 'This time slot overlaps with an existing session'
-    });
+  // Get psychologist
+  const psychologist = await Psychologist.findOne({ user: req.user._id });
+  if (!psychologist) {
+    res.status(404);
+    throw new Error('Psychologist not found');
   }
 
   const session = await Session.create({
-    psychologist: req.user._id,
     student: studentId,
-    sessionDetails: {
-      date,
-      startTime,
-      endTime,
-      duration: 2
-    }
+    psychologist: psychologist._id,
+    date,
+    time,
+    type,
+    description,
+    duration,
+    status: 'scheduled'
   });
 
   await session.populate([
-    { path: 'student', select: 'personalInfo academicInfo' },
+    { path: 'student', select: 'personalInfo' },
     { path: 'psychologist', select: 'personalInfo' }
   ]);
 
   res.status(201).json(session);
 });
 
-// Get all sessions for a psychologist
+// Get upcoming sessions for psychologist
+exports.getUpcomingSessions = asyncHandler(async (req, res) => {
+  const psychologist = await Psychologist.findOne({ user: req.user._id });
+  if (!psychologist) {
+    res.status(404);
+    throw new Error('Psychologist not found');
+  }
+
+  const sessions = await Session.find({
+    psychologist: psychologist._id,
+    status: 'scheduled',
+    date: { $gte: new Date() }
+  }).populate({
+    path: 'student',
+    select: 'personalInfo contactInfo user',
+    populate: { path: 'user', select: 'email status' }
+  }).sort({ date: 1, time: 1 });
+
+  res.json(sessions);
+});
+
+// Get past sessions for psychologist
+exports.getPastSessions = asyncHandler(async (req, res) => {
+  const psychologist = await Psychologist.findOne({ user: req.user._id });
+  if (!psychologist) {
+    res.status(404);
+    throw new Error('Psychologist not found');
+  }
+
+  const sessions = await Session.find({
+    psychologist: psychologist._id,
+    $or: [
+      { status: 'completed' },
+      { date: { $lt: new Date() } }
+    ]
+  }).populate({
+    path: 'student',
+    select: 'personalInfo contactInfo user',
+    populate: { path: 'user', select: 'email status' }
+  }).sort({ date: -1, time: -1 });
+
+  res.json(sessions);
+});
+
+// Get all sessions for a psychologist with filters
 exports.getPsychologistSessions = asyncHandler(async (req, res) => {
-  const { status, timeframe } = req.query;
-  const query = { psychologist: req.user._id };
-
-  // Filter by status if provided
-  if (status) {
-    query.status = status;
+  const psychologist = await Psychologist.findOne({ user: req.user._id });
+  if (!psychologist) {
+    res.status(404);
+    throw new Error('Psychologist not found');
   }
 
-  // Filter by timeframe
-  const currentDate = new Date();
-  if (timeframe === 'upcoming') {
-    query['sessionDetails.date'] = { $gte: currentDate };
-  } else if (timeframe === 'past') {
-    query['sessionDetails.date'] = { $lt: currentDate };
+  const { status, startDate, endDate } = req.query;
+  const query = { psychologist: psychologist._id };
+
+  if (status) query.status = status;
+  if (startDate || endDate) {
+    query.date = {};
+    if (startDate) query.date.$gte = new Date(startDate);
+    if (endDate) query.date.$lte = new Date(endDate);
   }
 
   const sessions = await Session.find(query)
-    .populate('student', 'personalInfo academicInfo contactInfo')
-    .sort({ 'sessionDetails.date': 1, 'sessionDetails.startTime': 1 });
+    .populate({
+      path: 'student',
+      select: 'personalInfo contactInfo user',
+      populate: { path: 'user', select: 'email status' }
+    })
+    .sort({ date: -1, time: -1 });
 
-  // Group sessions by date
-  const groupedSessions = sessions.reduce((acc, session) => {
-    const date = session.sessionDetails.date.toISOString().split('T')[0];
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(session);
-    return acc;
-  }, {});
-
-  res.json(groupedSessions);
+  res.json(sessions);
 });
 
-// Get all sessions for a student
+// Get sessions for a specific student
 exports.getStudentSessions = asyncHandler(async (req, res) => {
-  const { status, timeframe } = req.query;
-  const query = { student: req.user._id };
-
-  // Filter by status if provided
-  if (status) {
-    query.status = status;
+  const { studentId } = req.params;
+  const psychologist = await Psychologist.findOne({ user: req.user._id });
+  
+  if (!psychologist) {
+    res.status(404);
+    throw new Error('Psychologist not found');
   }
 
-  // Filter by timeframe
-  const currentDate = new Date();
-  if (timeframe === 'upcoming') {
-    query['sessionDetails.date'] = { $gte: currentDate };
-  } else if (timeframe === 'past') {
-    query['sessionDetails.date'] = { $lt: currentDate };
-  }
-
-  const sessions = await Session.find(query)
-    .populate('psychologist', 'personalInfo contactInfo')
-    .sort({ 'sessionDetails.date': 1, 'sessionDetails.startTime': 1 });
+  const sessions = await Session.find({
+    student: studentId,
+    psychologist: psychologist._id
+  }).sort({ date: -1, time: -1 });
 
   res.json(sessions);
 });
 
-// Update session status
-exports.updateSessionStatus = asyncHandler(async (req, res) => {
-  const { status, feedback } = req.body;
-  const session = await Session.findById(req.params.id);
-
-  if (!session) {
-    res.status(404);
-    throw new Error('Session not found');
-  }
-
-  session.status = status;
-  if (feedback) {
-    session.feedback = feedback;
-  }
-
-  const updatedSession = await session.save();
-  res.json(updatedSession);
-});
-
-// Add session notes
-exports.addSessionNotes = asyncHandler(async (req, res) => {
-  const { notes } = req.body;
-  const session = await Session.findById(req.params.id);
-
-  if (!session) {
-    res.status(404);
-    throw new Error('Session not found');
-  }
-
-  session.notes = notes;
-  const updatedSession = await session.save();
-  res.json(updatedSession);
-});
-
-// Schedule Session
-exports.scheduleSession = asyncHandler(async (req, res) => {
-  const { student, sessionDetails, notes } = req.body;
-
-  // Check if student exists
-  const studentExists = await Student.findById(student);
-  if (!studentExists) {
-    res.status(404);
-    throw new Error('Student not found');
-  }
-
-  // Check for existing scheduled sessions
-  const existingSession = await Session.findOne({
-    student,
-    'sessionDetails.date': sessionDetails.date,
-    'sessionDetails.time': sessionDetails.time,
-    status: 'Scheduled'
-  });
-
-  if (existingSession) {
-    res.status(400);
-    throw new Error('Session already scheduled at this time');
-  }
-
-  const session = new Session({
-    student,
-    psychologist: req.user._id,
-    sessionDetails,
-    notes
-  });
-
-  await session.save();
-
-  // Update student's sessions
-  await Student.findByIdAndUpdate(student, {
-    $push: { sessions: session._id }
-  });
-
-  res.status(201).json(session);
-});
-
-// Get Sessions for a Student
-exports.getStudentSessionsOld = asyncHandler(async (req, res) => {
-  const sessions = await Session.find({ 
-    student: req.params.studentId 
-  }).sort({ 'sessionDetails.date': -1 });
-
-  res.json(sessions);
-});
-
-// Get Psychologist Sessions
-exports.getPsychologistSessionsOld = asyncHandler(async (req, res) => {
-  const sessions = await Session.find({ 
-    psychologist: req.user._id 
-  })
-  .populate('student', 'personalInfo academicInfo')
-  .sort({ 'sessionDetails.date': -1 });
-
-  res.json(sessions);
-});
-
-// Update Session Status
-exports.updateSessionStatusOld = asyncHandler(async (req, res) => {
-  const session = await Session.findByIdAndUpdate(
-    req.params.id,
-    { 
-      status: req.body.status,
-      notes: req.body.notes
-    },
-    { new: true }
-  );
-
-  if (!session) {
-    res.status(404);
-    throw new Error('Session not found');
-  }
-
-  res.json(session);
-});
-
-// Get Single Session
+// Get a single session
 exports.getSingleSession = asyncHandler(async (req, res) => {
-  const session = await Session.findById(req.params.id)
-    .populate('student', 'personalInfo academicInfo')
+  const session = await Session.findById(req.params.sessionId)
+    .populate('student', 'personalInfo contactInfo')
     .populate('psychologist', 'personalInfo contactInfo');
 
   if (!session) {
@@ -234,58 +146,119 @@ exports.getSingleSession = asyncHandler(async (req, res) => {
   res.json(session);
 });
 
-// Cancel Session
-exports.cancelSession = asyncHandler(async (req, res) => {
-  const session = await Session.findByIdAndUpdate(
-    req.params.id,
-    { 
-      status: 'Cancelled',
-      cancellationReason: req.body.reason || 'No reason provided'
-    },
-    { new: true }
-  );
+// Update session status
+exports.updateSessionStatus = asyncHandler(async (req, res) => {
+  const { status } = req.body;
+  const session = await Session.findById(req.params.sessionId);
 
   if (!session) {
     res.status(404);
     throw new Error('Session not found');
   }
 
+  if (!['scheduled', 'completed', 'cancelled', 'no-show'].includes(status)) {
+    res.status(400);
+    throw new Error('Invalid status');
+  }
+
+  session.status = status;
+  await session.save();
+
   res.json(session);
 });
 
-// Reschedule Session
-exports.rescheduleSession = asyncHandler(async (req, res) => {
-  const { date, time, reason } = req.body;
+// Add session notes
+exports.addSessionNotes = asyncHandler(async (req, res) => {
+  const { notes } = req.body;
+  const session = await Session.findById(req.params.sessionId);
 
-  // Check for conflicts
-  const conflictingSession = await Session.findOne({
-    student: req.body.studentId,
-    'sessionDetails.date': date,
-    'sessionDetails.time': time,
-    status: 'Scheduled'
+  if (!session) {
+    res.status(404);
+    throw new Error('Session not found');
+  }
+
+  session.notes = notes;
+  await session.save();
+
+  res.json(session);
+});
+
+// Cancel session
+exports.cancelSession = asyncHandler(async (req, res) => {
+  const session = await Session.findById(req.params.sessionId);
+
+  if (!session) {
+    res.status(404);
+    throw new Error('Session not found');
+  }
+
+  session.status = 'cancelled';
+  session.cancellationReason = req.body.reason;
+  await session.save();
+
+  res.json(session);
+});
+
+// Reschedule session
+exports.rescheduleSession = asyncHandler(async (req, res) => {
+  const { date, time } = req.body;
+  const session = await Session.findById(req.params.sessionId);
+
+  if (!session) {
+    res.status(404);
+    throw new Error('Session not found');
+  }
+
+  session.date = date;
+  session.time = time;
+  session.status = 'scheduled';
+  await session.save();
+
+  res.json(session);
+});
+
+// Schedule a new session (for students)
+exports.scheduleSession = asyncHandler(async (req, res) => {
+  const { psychologistId, date, time, type, description } = req.body;
+
+  // Find student
+  const student = await Student.findOne({ user: req.user._id });
+  if (!student) {
+    res.status(404);
+    throw new Error('Student not found');
+  }
+
+  // Find psychologist
+  const psychologist = await Psychologist.findById(psychologistId);
+  if (!psychologist) {
+    res.status(404);
+    throw new Error('Psychologist not found');
+  }
+
+  // Check if psychologist is available
+  const isAvailable = await psychologist.isAvailable(date, time);
+  if (!isAvailable) {
+    res.status(400);
+    throw new Error('Psychologist is not available at this time');
+  }
+
+  // Create session
+  const session = await Session.create({
+    student: student._id,
+    psychologist: psychologistId,
+    date,
+    time,
+    type: type || 'individual',
+    description,
+    duration: 60, // Default duration
+    status: 'scheduled'
   });
 
-  if (conflictingSession) {
-    res.status(400);
-    throw new Error('A session is already scheduled at this time');
-  }
+  await session.populate([
+    { path: 'student', select: 'personalInfo' },
+    { path: 'psychologist', select: 'personalInfo' }
+  ]);
 
-  const session = await Session.findByIdAndUpdate(
-    req.params.id,
-    { 
-      status: 'Rescheduled',
-      'sessionDetails.date': date,
-      'sessionDetails.time': time,
-      rescheduledReason: reason,
-      rescheduledAt: new Date()
-    },
-    { new: true }
-  );
-
-  if (!session) {
-    res.status(404);
-    throw new Error('Session not found');
-  }
-
-  res.json(session);
+  res.status(201).json(session);
 });
+

@@ -26,31 +26,20 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      // Handle specific error cases
       switch (error.response.status) {
         case 401:
-          // Unauthorized - clear token and redirect to login
           localStorage.removeItem('token');
           window.location.href = '/login';
           break;
         case 403:
-          // Forbidden
           console.error('Access forbidden');
           break;
         case 404:
-          // Not found
           console.error('Resource not found');
           break;
         default:
-          // Other errors
           console.error('API Error:', error.response.data);
       }
-    } else if (error.request) {
-      // Network error
-      console.error('Network Error:', error.request);
-    } else {
-      // Other errors
-      console.error('Error:', error.message);
     }
     return Promise.reject(error);
   }
@@ -58,32 +47,49 @@ api.interceptors.response.use(
 
 // Session related API calls
 const sessions = {
-  getUpcoming: () => api.get('/sessions/psychologist?timeframe=upcoming'),
-  getPast: () => api.get('/sessions/psychologist?timeframe=past'),
   create: (data) => api.post('/sessions', data),
+  getUpcoming: () => api.get('/sessions/psychologist/upcoming'),
+  getPast: () => api.get('/sessions/psychologist/past'),
+  getAll: (filters) => api.get('/sessions/psychologist/all', { params: filters }),
+  getByStudent: (studentId) => api.get(`/sessions/student/${studentId}`),
+  getSingle: (sessionId) => api.get(`/sessions/${sessionId}`),
   updateStatus: (sessionId, status) => api.patch(`/sessions/${sessionId}/status`, { status }),
-  addNotes: (sessionId, notes) => api.patch(`/sessions/${sessionId}/notes`, { notes })
+  addNotes: (sessionId, notes) => api.patch(`/sessions/${sessionId}/notes`, { notes }),
+  cancel: (sessionId, reason) => api.post(`/sessions/${sessionId}/cancel`, { reason }),
+  reschedule: (sessionId, data) => api.post(`/sessions/${sessionId}/reschedule`, data)
+};
+
+// Psychologist related API calls
+const profile = {
+  get: () => api.get('/psychologists/profile'),
+  update: (data) => api.put('/psychologists/profile', data),
+  updateAvailability: (data) => api.put('/psychologists/availability', data)
 };
 
 // Student related API calls
 const students = {
-  getAll: () => api.get('/psychologist/students'),
-  enroll: (data) => api.post('/psychologist/students/enroll', data),
+  getAll: () => api.get('/psychologists/students'),
+  enroll: (data) => api.post('/psychologists/students/enroll', data),
   getOne: (id) => api.get(`/students/${id}`),
   update: (id, data) => api.put(`/students/${id}`, data)
 };
 
-// Profile related API calls
-const profile = {
-  get: () => api.get('/psychologist/profile'),
-  update: (data) => api.put('/psychologist/profile', data),
-  updateAvailability: (data) => api.put('/psychologist/availability', data)
+// Admin related API calls
+const admin = {
+  getProfile: () => api.get('/admin/profile'),
+  getUsers: () => api.get('/admin/users'),
+  getPsychologists: () => api.get('/admin/psychologists'),
+  updateUserStatus: (userId, data) => api.put('/admin/user-status', { userId, ...data }),
+  updatePsychologistProfile: (psychologistId, data) => api.put(`/admin/psychologists/${psychologistId}`, data),
+  enrollPsychologist: (data) => api.post('/admin/psychologists', data),
+  updateAdminPermissions: (adminId, permissions) => api.put('/admin/admin-permissions', { adminId, permissions })
 };
 
 // Export all API functions
 export default {
   ...api,
   sessions,
+  profile,
   students,
-  profile
+  admin
 };

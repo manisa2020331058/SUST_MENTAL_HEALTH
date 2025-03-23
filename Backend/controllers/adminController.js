@@ -145,6 +145,105 @@ exports.enrollPsychologist = asyncHandler(async (req, res) => {
   });
 });
 
+// Get Admin Profile
+exports.getAdminProfile = asyncHandler(async (req, res) => {
+  const admin = await Admin.findOne({ user: req.user._id })
+    .populate('user', '-password');
+
+  if (!admin) {
+    res.status(404);
+    throw new Error('Admin profile not found');
+  }
+
+  res.json({
+    name: admin.name,
+    email: admin.user.email,
+    role: admin.user.role,
+    permissions: admin.permissions
+  });
+});
+
+// Get All Users
+exports.getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({}, '-password');
+  
+  const formattedUsers = await Promise.all(users.map(async (user) => {
+    let profile;
+    switch (user.role) {
+      case 'admin':
+        profile = await Admin.findOne({ user: user._id });
+        break;
+      case 'psychologist':
+        profile = await Psychologist.findOne({ user: user._id });
+        break;
+      case 'student':
+        profile = await Student.findOne({ user: user._id });
+        break;
+    }
+
+    return {
+      _id: user._id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      name: profile?.name || profile?.personalInfo?.name || 'N/A',
+      createdAt: user.createdAt
+    };
+  }));
+
+  res.json(formattedUsers);
+});
+
+// Get All Psychologists
+exports.getPsychologists = asyncHandler(async (req, res) => {
+  const psychologists = await Psychologist.find()
+    .populate('user', 'email status');
+
+  const formattedPsychologists = psychologists.map(psych => ({
+    _id: psych._id,
+    personalInfo: psych.personalInfo,
+    professionalInfo: psych.professionalInfo,
+    contactInfo: {
+      ...psych.contactInfo,
+      email: psych.user.email
+    },
+    status: psych.user.status,
+    availabilitySchedule: psych.availabilitySchedule
+  }));
+
+  res.json(formattedPsychologists);
+});
+
+// Update User Status
+exports.updateUserStatus = asyncHandler(async (req, res) => {
+  const { userId, status } = req.body;
+
+  if (!['active', 'suspended'].includes(status)) {
+    res.status(400);
+    throw new Error('Invalid status value');
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  user.status = status;
+  await user.save();
+
+  res.json({
+    message: 'User status updated successfully',
+    user: {
+      _id: user._id,
+      email: user.email,
+      role: user.role,
+      status: user.status
+    }
+  });
+});
+
+// Update Admin Permissions
 exports.updateAdminPermissions = asyncHandler(async (req, res) => {
   const { adminId, permissions } = req.body;
 
@@ -154,39 +253,51 @@ exports.updateAdminPermissions = asyncHandler(async (req, res) => {
     throw new Error('Admin not found');
   }
 
-  // Update permissions
   admin.permissions = permissions;
   await admin.save();
 
-  res.json({ message: 'Permissions updated successfully', admin });
+  res.json({
+    message: 'Admin permissions updated successfully',
+    admin: {
+      _id: admin._id,
+      permissions: admin.permissions
+    }
+  });
 });
 
-// Get All Users
-exports.getAllUsers = asyncHandler(async (req, res) => {
-  const users = await User.find()
-    .select('-password')
-    .populate({
-      path: 'createdBy',
-      select: 'name email'
-    });
+// Update Psychologist Profile (Admin only)
+exports.updatePsychologistProfile = asyncHandler(async (req, res) => {
+  const { psychologistId } = req.params;
+  const { personalInfo, professionalInfo, contactInfo, availabilitySchedule, status } = req.body;
+
+  // Find psychologist
+  const psychologist = await Psychologist.findById(psychologistId);
   
-  res.json(users);
-});
-
-// Update User Status
-exports.updateUserStatus = asyncHandler(async (req, res) => {
-  const { userId, status } = req.body;
-
-  const user = await User.findByIdAndUpdate(
-    userId,
-    { status },
-    { new: true }
-  ).select('-password');
-
-  if (!user) {
+  if (!psychologist) {
     res.status(404);
-    throw new Error('User not found');
+    throw new Error('Psychologist not found');
   }
 
-  res.json(user);
+  // Update the fields if provided
+  if (personalInfo) psychologist.personalInfo = personalInfo;
+  if (professionalInfo) psychologist.professionalInfo = professionalInfo;
+  if (contactInfo) psychologist.contactInfo = contactInfo;
+  if (availabilitySchedule) psychologist.availabilitySchedule = availabilitySchedule;
+  if (status) psychologist.status = status;
+
+  // Save the updated profile
+  await psychologist.save();
+
+  res.json({
+    message: 'Psychologist profile updated successfully',
+    psychologist: {
+      psychologistId: psychologist._id,
+      userId: psychologist.user,
+      personalInfo: psychologist.personalInfo,
+      professionalInfo: psychologist.professionalInfo,
+      contactInfo: psychologist.contactInfo,
+      availabilitySchedule: psychologist.availabilitySchedule,
+      status: psychologist.status
+    }
+  });
 });

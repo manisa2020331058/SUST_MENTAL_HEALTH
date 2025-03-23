@@ -4,33 +4,45 @@ const {
   createInitialAdmin,
   enrollPsychologist,
   getAllUsers,
+  getPsychologists,
   updateUserStatus,
   createAdmin,
   updateAdminPermissions,
-  hasPermission
+  hasPermission,
+  updatePsychologistProfile,
+  getAdminProfile
 } = require('../controllers/adminController');
 const { 
   loginUser, 
-  changePassword,
-  getCurrentUserProfile
+  changePassword
 } = require('../controllers/userController');
-const { protect, adminOnly,checkPermission} = require('../middleware/authMiddleware');
+const { protect, adminOnly } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
 // Authentication Routes
-router.post('/create-admin', protect, adminOnly, createAdmin);
 router.post('/initial-setup', createInitialAdmin);
 router.post('/login', loginUser);
+
+// Admin Management Routes
+router.post('/create-admin', protect, adminOnly, hasPermission('user_management'), createAdmin);
+router.get('/profile', protect, adminOnly, getAdminProfile);
 router.put('/change-password', protect, adminOnly, changePassword);
-router.get('/profile', protect, adminOnly, getCurrentUserProfile);
-//update perission
 router.put('/admin-permissions', protect, adminOnly, hasPermission('user_management'), updateAdminPermissions);
 
-
 // User Management Routes
-router.get('/users', protect, adminOnly, getAllUsers);
-router.post('/psychologists', protect, adminOnly, hasPermission('psychologist_management'),enrollPsychologist);
-router.put('/user-status', protect, adminOnly, updateUserStatus);
+router.get('/users', protect, adminOnly, hasPermission('user_management'), getAllUsers);
+router.put('/user-status', protect, adminOnly, hasPermission('user_management'), updateUserStatus);
+
+// Psychologist Management Routes
+router.get('/psychologists', protect, adminOnly, hasPermission('psychologist_management'), getPsychologists);
+router.post('/psychologists', protect, adminOnly, hasPermission('psychologist_management'), enrollPsychologist);
+router.put(
+  '/psychologists/:psychologistId',
+  protect,
+  adminOnly,
+  hasPermission('psychologist_management'),
+  updatePsychologistProfile
+);
 
 module.exports = router;

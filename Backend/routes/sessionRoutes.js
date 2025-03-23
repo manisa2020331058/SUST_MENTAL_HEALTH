@@ -6,12 +6,13 @@ const {
   psychologistOnly, 
   studentOnly 
 } = require('../middleware/authMiddleware');
-const { checkRole } = require('../middleware/roleMiddleware');
 const {
   scheduleSession,
   createSession,
   getStudentSessions,
   getPsychologistSessions,
+  getUpcomingSessions,
+  getPastSessions,
   updateSessionStatus,
   getSingleSession,
   cancelSession,
@@ -19,40 +20,24 @@ const {
   addSessionNotes
 } = require('../controllers/sessionController');
 
-// Schedule a new session (Psychologist only)
-router.post('/', protect, psychologistOnly, scheduleSession);
-
-// Create a new session (Psychologist only)
-router.post('/create', protect, checkRole(['psychologist']), createSession);
-
-// Get sessions for a specific student (Psychologist only)
+// Psychologist Routes
+router.post('/', protect, psychologistOnly, createSession);
+router.get('/psychologist/upcoming', protect, psychologistOnly, getUpcomingSessions);
+router.get('/psychologist/past', protect, psychologistOnly, getPastSessions);
+router.get('/psychologist/all', protect, psychologistOnly, getPsychologistSessions);
 router.get('/student/:studentId', protect, psychologistOnly, getStudentSessions);
 
-// Get student's sessions with optional filters
-router.get('/student', protect, checkRole(['student']), getStudentSessions);
+// Session Management Routes
+router.get('/:sessionId', protect, getSingleSession);
+router.patch('/:sessionId/status', protect, psychologistOnly, updateSessionStatus);
+router.patch('/:sessionId/notes', protect, psychologistOnly, addSessionNotes);
+router.post('/:sessionId/cancel', protect, cancelSession);
+router.post('/:sessionId/reschedule', protect, psychologistOnly, rescheduleSession);
 
-// Get sessions for a psychologist (Psychologist only)
-router.get('/psychologist', protect, psychologistOnly, getPsychologistSessions);
+// Student Routes
+router.post('/schedule', protect, studentOnly, scheduleSession);
+router.get('/student/upcoming', protect, studentOnly, getUpcomingSessions);
+router.get('/student/past', protect, studentOnly, getPastSessions);
 
-// Get psychologist's sessions with optional filters
-router.get('/psychologist/all', protect, checkRole(['psychologist']), getPsychologistSessions);
-
-// Get a single session details
-router.get('/:id', protect, getSingleSession);
-
-// Update session status (Psychologist only)
-router.put('/:id/status', protect, psychologistOnly, updateSessionStatus);
-
-// Update session status (Psychologist only)
-router.patch('/:id/status', protect, checkRole(['psychologist']), updateSessionStatus);
-
-// Cancel a session (Psychologist only)
-router.put('/:id/cancel', protect, psychologistOnly, cancelSession);
-
-// Reschedule a session (Psychologist only)
-router.put('/:id/reschedule', protect, psychologistOnly, rescheduleSession);
-
-// Add session notes (Psychologist only)
-router.patch('/:id/notes', protect, checkRole(['psychologist']), addSessionNotes);
 
 module.exports = router;

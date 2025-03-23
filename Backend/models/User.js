@@ -1,18 +1,22 @@
 // models/User.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 const UserSchema = new mongoose.Schema({
   email: {
     type: String,
-    required: true,
+    required: [true, 'Email is required'],
     unique: true,
     lowercase: true,
-    trim: true
+    trim: true,
+    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
   },
   password: {
     type: String,
-    required: true
+    required: [true, 'Password is required'],
+    minlength: [6, 'Password must be at least 6 characters']
   },
   role: {
     type: String,
@@ -32,13 +36,46 @@ const UserSchema = new mongoose.Schema({
     type: String,
     enum: ['Admin', 'Psychologist']
   },
+  passwordResetToken: String,
+  passwordResetExpires: Date,
   lastLogin: {
     type: Date
   },
+  loginHistory: [{
+    timestamp: {
+      type: Date,
+      default: Date.now
+    },
+    ipAddress: String,
+    userAgent: String,
+    location: String
+  }],
+  failedLoginAttempts: {
+    type: Number,
+    default: 0
+  },
+  lockoutUntil: Date,
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationToken: String,
+  emailVerificationExpires: Date,
+  twoFactorEnabled: {
+    type: Boolean,
+    default: false
+  },
+  twoFactorSecret: String,
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
   }
+}, {
+  timestamps: true
 });
 
 // Password hashing middleware
@@ -54,9 +91,72 @@ UserSchema.pre('save', async function(next) {
   }
 });
 
+// Update timestamps before saving
+UserSchema.pre('save', function(next) {
+  this.updatedAt = new Date();
+  next();
+});
+
 // Method to check password
 UserSchema.methods.matchPassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Generate JWT Token
+UserSchema.methods.generateAuthToken = function() {
+  return jwt.sign(
+    { id: this._id, role: this.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+};
+
+// Record login attempt
+UserSchema.methods.recordLoginAttempt = async function(success, ipAddress, userAgent, location) {
+  if (success) {
+    this.failedLoginAttempts = 0;
+    this.lockoutUntil = undefined;
+    this.lastLogin = new Date();
+    this.loginHistory.push({
+      timestamp: new Date(),
+      ipAddress,
+      userAgent,
+      location
+    });
+  } else {
+    this.failedLoginAttempts += 1;
+    if (this.failedLoginAttempts >= 5) {
+      this.lockoutUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes lockout
+    }
+  }
+  await this.save();
+};
+
+// Generate password reset token
+UserSchema.methods.generatePasswordResetToken = function() {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+  return resetToken;
+};
+
+// Generate email verification token
+UserSchema.methods.generateEmailVerificationToken = function() {
+  const verificationToken = crypto.randomBytes(32).toString('hex');
+  this.emailVerificationToken = crypto
+    .createHash('sha256')
+    .update(verificationToken)
+    .digest('hex');
+  this.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+  return verificationToken;
+};
+
+// Check if user is locked out
+UserSchema.methods.isLockedOut = function() {
+  return this.lockoutUntil && this.lockoutUntil > new Date();
 };
 
 module.exports = mongoose.model('User', UserSchema);

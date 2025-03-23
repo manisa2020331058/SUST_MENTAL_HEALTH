@@ -12,37 +12,41 @@ const SessionSchema = new mongoose.Schema({
     ref: 'Student',
     required: true
   },
-  sessionDetails: {
-    date: {
-      type: Date,
-      required: true
-    },
-    startTime: {
-      type: String,
-      required: true
-    },
-    endTime: {
-      type: String,
-      required: true
-    },
-    duration: {
-      type: Number,
-      default: 2, // Duration in hours
-      validate: {
-        validator: function(v) {
-          return v === 2; // Ensure session duration is exactly 2 hours
-        },
-        message: 'Session duration must be 2 hours'
-      }
-    }
+  date: {
+    type: Date,
+    required: true
+  },
+  time: {
+    type: String,
+    required: true
+  },
+  duration: {
+    type: Number,
+    default: 60, // Duration in minutes
+    required: true
+  },
+  type: {
+    type: String,
+    enum: ['individual', 'group', 'emergency'],
+    default: 'individual',
+    required: true
   },
   status: {
     type: String,
-    enum: ['scheduled', 'completed', 'cancelled'],
+    enum: ['scheduled', 'completed', 'cancelled', 'no-show'],
     default: 'scheduled'
   },
+  description: {
+    type: String,
+    trim: true
+  },
   notes: {
-    type: String
+    type: String,
+    trim: true
+  },
+  cancellationReason: {
+    type: String,
+    trim: true
   },
   feedback: {
     rating: {
@@ -50,39 +54,77 @@ const SessionSchema = new mongoose.Schema({
       min: 1,
       max: 5
     },
-    comments: String
+    comment: {
+      type: String,
+      trim: true
+    },
+    submittedAt: Date
   },
+  followUpNeeded: {
+    type: Boolean,
+    default: false
+  },
+  tags: [{
+    type: String,
+    trim: true
+  }],
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
   }
+}, {
+  timestamps: true
+});
+
+// Update timestamps before saving
+SessionSchema.pre('save', function(next) {
+  this.updatedAt = new Date();
+  next();
 });
 
 // Method to check for overlapping sessions
-SessionSchema.statics.checkOverlap = async function(psychologistId, date, startTime, endTime, excludeSessionId = null) {
-  const startDateTime = new Date(`${date}T${startTime}`);
-  const endDateTime = new Date(`${date}T${endTime}`);
+SessionSchema.statics.checkOverlap = async function(psychologistId, date, time, duration, excludeSessionId = null) {
+  const sessionDate = new Date(date);
+  const [hours, minutes] = time.split(':').map(Number);
+  const sessionStart = new Date(sessionDate.setHours(hours, minutes));
+  const sessionEnd = new Date(sessionStart.getTime() + duration * 60000);
 
   const query = {
     psychologist: psychologistId,
-    'sessionDetails.date': date,
+    date: sessionDate,
     status: 'scheduled',
-    _id: { $ne: excludeSessionId }, // Exclude current session if updating
-    $or: [
-      {
-        // New session starts during an existing session
-        'sessionDetails.startTime': { 
-          $lt: endTime 
-        },
-        'sessionDetails.endTime': { 
-          $gt: startTime 
-        }
-      }
-    ]
+    _id: { $ne: excludeSessionId }
   };
 
   const overlappingSessions = await this.find(query);
-  return overlappingSessions.length > 0;
+
+  return overlappingSessions.some(session => {
+    const [existingHours, existingMinutes] = session.time.split(':').map(Number);
+    const existingStart = new Date(session.date.setHours(existingHours, existingMinutes));
+    const existingEnd = new Date(existingStart.getTime() + session.duration * 60000);
+
+    return (sessionStart < existingEnd && sessionEnd > existingStart);
+  });
 };
+
+// Method to get session duration in formatted string
+SessionSchema.methods.getDurationString = function() {
+  const hours = Math.floor(this.duration / 60);
+  const minutes = this.duration % 60;
+  return `${hours}h ${minutes}m`;
+};
+
+// Virtual for formatted date and time
+SessionSchema.virtual('formattedDateTime').get(function() {
+  return `${this.date.toLocaleDateString()} at ${this.time}`;
+});
+
+// Ensure virtuals are included in JSON output
+SessionSchema.set('toJSON', { virtuals: true });
+SessionSchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model('Session', SessionSchema);
