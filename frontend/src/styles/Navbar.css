@@ -1,0 +1,110 @@
+/* src/styles/Navbar.css */
+.navbar-sust {
+  background-color: #000; /* Black background */
+  color: white;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+}
+
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo-box {
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 5px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.sust-logo {
+  height: 50px; /* Slightly smaller to fit in the box */
+  width: auto;
+}
+
+.university-name {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: white;
+  margin-left: 15px;
+}
+
+.navbar-menu {
+  display: flex;
+  list-style: none;
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+.navbar-menu li a {
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.navbar-menu li a:hover {
+  color: #4a90e2; /* Bright blue for hover */
+  transform: scale(1.05);
+}
+
+.login-button {
+  background-color: #4a90e2;
+  color: white !important;
+  padding: 8px 15px;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: #357abd;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .navbar-container {
+    flex-direction: column;
+    height: auto;
+    padding: 10px;
+  }
+
+  .navbar-logo {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .university-name {
+    margin-left: 0;
+    margin-top: 10px;
+    font-size: 1em;
+  }
+
+  .navbar-menu {
+    flex-direction: column;
+    margin-top: 10px;
+  }
+}

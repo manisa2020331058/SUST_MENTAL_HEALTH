@@ -1,0 +1,396 @@
+/* src/styles/HomePage.css */
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f0f8; /* Light lavender background */
+  color: #333;
+}
+
+.homepage {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content {
+  flex: 1;
+  padding: 100px 20px; /* Adjust padding for top and sides */
+  overflow-y: auto;
+}
+
+.hero {
+  background-color: #278cb4; /* Lavender hero background */
+  color: #fff;
+  padding: 40px;
+  text-align: center;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.hero h1 {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+}
+
+.cta-button {
+  background-color: #fff;
+  color: #7e57c2;
+  padding: 10px 20px;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.cta-button:hover {
+  background-color: #e1bee7;
+}
+
+.about, .services {
+  background-color: #fff;
+  padding: 40px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.about h2, .services h2 {
+  color: #579bc2;
+  margin-bottom: 20px;
+}
+
+
+.services-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.service-card {
+  flex: 1;
+  text-align: center;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  background-color: #3691af;
+}
+
+.service-card:hover {
+  transform: translateY(-15px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+}
+
+.service-card img {
+  width: 200px;  /* Increased size */
+  height: 200px; /* Increased size */
+  margin-bottom: 20px;
+  object-fit: contain; /* Ensures image maintains aspect ratio */
+  transition: transform 0.3s ease;
+}
+
+.service-card:hover img {
+  transform: scale(1.1); /* Slight zoom effect on hover */
+}
+
+.service-card h3 {
+  margin-bottom: 15px;
+  font-size: 1.5em;
+  color: #333;
+}
+
+.service-card p {
+  color: #666;
+  line-height: 1.6;
+}
+.seminars-list {
+  display: flex;
+  gap: 20px;
+}
+
+.seminar-card {
+  flex: 1;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.seminar-date {
+  background-color: #4a90e2;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.seminar-details {
+  padding: 15px;
+}
+
+.register-button {
+  width: 100%;
+  padding: 10px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+/* src/styles/HomePage.css */
+/* ... existing styles ... */
+
+.about-grid {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.about-text, .about-mission {
+  flex: 1;
+  background-color: #f9f9f9;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.about-highlights {
+  list-style-type: none;
+  padding: 0;
+  margin-top: 15px;
+}
+
+.about-highlights li {
+  position: relative;
+  padding-left: 25px;
+  margin-bottom: 10px;
+}
+
+.about-highlights li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #4a90e2;
+  font-weight: bold;
+}
+
+.service-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.service-hover-details {
+  display: none;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  padding: 15px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.service-card:hover .service-hover-details {
+  display: block;
+  transform: translateY(0);
+}
+
+.psychologists-grid {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+}
+
+.psychologist-card {
+  position: relative;
+  width: 300px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.psychologist-card:hover {
+  transform: scale(1.05);
+}
+
+.psychologist-image img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+}
+
+.psychologist-details {
+  padding: 15px;
+  background-color: #f9f9f9;
+  text-align: center;
+}
+
+.psychologist-details .hover-details {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.psychologist-details.hovered .hover-details {
+  opacity: 1;
+}
+
+.book-session-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #4a90e2;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+}
+/* Add to existing HomePage.css */
+.seminars {
+  background-color: #f4f7f6;
+  padding: 50px 0;
+}
+
+.seminars-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.seminars-content h2 {
+  text-align: center;
+  margin-bottom: 40px;
+  color: #332946;
+}
+
+.seminars-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+
+.seminar-card {
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  position: relative;
+}
+
+.seminar-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+}
+
+.seminar-date {
+  background-color: #71a3bb;
+  color: white;
+  width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 0;
+}
+
+.seminar-date .day {
+  font-size: 2em;
+  font-weight: bold;
+}
+
+.seminar-date .month {
+  text-transform: uppercase;
+  font-size: 0.8em;
+}
+
+.seminar-content {
+  padding: 20px;
+  flex-grow: 1;
+}
+
+.seminar-content h3 {
+  margin-bottom: 15px;
+  color: #332946;
+}
+
+.seminar-meta {
+  margin-bottom: 15px;
+}
+
+.seminar-meta p {
+  display: flex;
+  align-items: center;
+  margin: 5px 0;
+  color: #666;
+}
+
+.seminar-meta p i {
+  margin-right: 10px;
+  color: #4abee2;
+}
+
+.seminar-description {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 10px;
+  animation: fadeIn 0.3s ease;
+}
+
+.register-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #53b1c9;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  margin-top: 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.register-btn:hover {
+  background-color: #357abd;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .seminars-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .seminars-grid {
+    grid-template-columns: 1fr;
+  }
+}
