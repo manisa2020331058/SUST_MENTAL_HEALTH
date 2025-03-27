@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/Navbar.css';
 import sustLogo from '../images/sust- logo.png';
+import Resources from '../pages/Resources';
 
 const Navbar = () => {
   return (
@@ -17,7 +18,7 @@ const Navbar = () => {
         <ul className="navbar-menu">
           <li><Link to="/resources">Resources</Link></li>
           <li><Link to="/contact">Contact</Link></li>
-          <li><Link to="/login" className="login-button">Login</Link></li>
+          <li><Link to="/login" className="login-but">Login</Link></li>
         </ul>
       </div>
     </nav>

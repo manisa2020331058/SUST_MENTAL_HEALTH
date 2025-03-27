@@ -9,6 +9,9 @@ import {
 import '../styles/PsychologistDashboard.css';
 import api from '../utils/api';
 import { PsychologistProfile } from './PsychologistProfile';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
 
 const defaultProfile = {
   personalInfo: {
@@ -53,7 +56,7 @@ const PsychologistDashboard = () => {
     date: '',
     time: '',
     location: '',
-    maxParticipants: 50,
+   
     registeredParticipants: 0
   });
 
@@ -71,8 +74,7 @@ const PsychologistDashboard = () => {
     department: '',
     session: '',
     currentYear: '',
-    cgpa: '',
-    scholarshipStatus: ''
+    address:'',
   });
 
   const [newSession, setNewSession] = useState({
@@ -231,10 +233,36 @@ const PsychologistDashboard = () => {
   };
 
   const handleEnrollStudent = async (e) => {
+    console.log('newStudent:', newStudent);
+    const token = localStorage.getItem('token');
+    console.log('token:', token);
     e.preventDefault();
     try {
       setLoading(true);
-      await api.students.enroll(newStudent);
+      const studentData = {
+        personalInfo: {
+          name: newStudent.name,
+          gender: newStudent.gender,
+          dateOfBirth: newStudent.dateOfBirth,
+          age: newStudent.age
+        },
+        contactInfo: {
+          email: newStudent.email,
+          phoneNumber: newStudent.phoneNumber,
+          alternatePhoneNumber: newStudent.alternatePhoneNumber,
+          address:newStudent.address
+        },
+        academicInfo: {
+          registrationNumber: newStudent.registrationNumber,
+          department: newStudent.department,
+          session: newStudent.session,
+          currentYear: newStudent.currentYear,
+        }
+      };
+      const response = await api.students.enroll(studentData);
+      console.log('Request payload:', response.config.data);
+      console.log('Request headers:', response.config.headers);
+      console.log('Response:', response);
       fetchStudents();
       setNewStudent({
         name: '',
@@ -249,12 +277,15 @@ const PsychologistDashboard = () => {
         department: '',
         session: '',
         currentYear: '',
-        cgpa: '',
-        scholarshipStatus: ''
+        address:''
       });
       setError(null);
+      alert("Student enrolled successfully!");
     } catch (err) {
+      console.error('Error:', err);
+      console.log('Error response:', err.response);
       setError('Error enrolling student: ' + (err.response?.data?.message || err.message));
+     
     } finally {
       setLoading(false);
     }
@@ -460,6 +491,17 @@ const PsychologistDashboard = () => {
                 required 
               />
             </div>
+            <div className="form-group">
+              <label>Address</label>
+              <input 
+                type="text" 
+                value={newStudent.address}
+                onChange={(e) => setNewStudent({...newStudent, address:e.target.value})}
+                placeholder="Enter address"
+          
+                required 
+              />
+            </div>
           </div>
 
           <div className="form-row">
@@ -541,33 +583,6 @@ const PsychologistDashboard = () => {
                 <option value="2nd Year">2nd Year</option>
                 <option value="3rd Year">3rd Year</option>
                 <option value="4th Year">4th Year</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>CGPA</label>
-              <input 
-                type="number" 
-                step="0.01"
-                min="0"
-                max="4.00"
-                value={newStudent.cgpa}
-                onChange={(e) => setNewStudent({...newStudent, cgpa: e.target.value})}
-                placeholder="Enter CGPA"
-              />
-            </div>
-            <div className="form-group">
-              <label>Scholarship Status</label>
-              <select 
-                value={newStudent.scholarshipStatus}
-                onChange={(e) => setNewStudent({...newStudent, scholarshipStatus: e.target.value})}
-              >
-                <option value="">Select Scholarship Status</option>
-                <option value="None">None</option>
-                <option value="Partial">Partial</option>
-                <option value="Full">Full</option>
               </select>
             </div>
           </div>

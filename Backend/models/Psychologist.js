@@ -6,7 +6,7 @@ const PsychologistSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    unique: true
+
   },
   personalInfo: {
     name: {
@@ -28,8 +28,18 @@ const PsychologistSchema = new mongoose.Schema({
       trim: true,
       maxLength: 500
     },
-    profileImage: {
-      type: String
+    profileImage: { 
+      type: String, 
+      default: '../images/default-avatar.png', // Default image path
+      validate: {
+        validator: function(v) {
+          // Optional: Add URL validation if needed
+          return v === null || 
+                 v === '' || 
+                 /^(https?:\/\/.*\.(png|jpg|jpeg|gif|webp))/i.test(v);
+        },
+        message: 'Invalid image URL'
+      }
     }
   },
   professionalInfo: {
@@ -105,7 +115,7 @@ const PsychologistSchema = new mongoose.Schema({
     day: {
       type: String,
       enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-      required: true
+  
     },
     slots: [{
       startTime: {

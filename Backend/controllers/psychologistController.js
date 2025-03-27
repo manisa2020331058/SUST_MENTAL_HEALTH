@@ -7,7 +7,11 @@ const User = require('../models/User');
 
 // Get Psychologist Profile
 exports.getPsychologistProfile = asyncHandler(async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res.status(400).json({ message: "Invalid user ID" });
+  }
   const psychologist = await Psychologist.findOne({ user: req.user._id })
+  
     .populate('user', '-password');
   
   if (!psychologist) {
@@ -31,8 +35,8 @@ exports.getPsychologistProfile = asyncHandler(async (req, res) => {
 
 // Get Psychologist's Students
 exports.getPsychologistStudents = asyncHandler(async (req, res) => {
-  const psychologist = await Psychologist.findOne({ user: req.user._id });
-  
+  const psychologist = await Psychologist.findOne({ user: req.user._id})
+ 
   if (!psychologist) {
     res.status(404);
     throw new Error('Psychologist not found');
@@ -43,14 +47,14 @@ exports.getPsychologistStudents = asyncHandler(async (req, res) => {
 
   const formattedStudents = students.map(student => ({
     studentId: student._id,
-    userId: student.user._id,
+    userId: student.user ? student.user._id : null, 
     personalInfo: student.personalInfo,
     academicInfo: student.academicInfo,
     contactInfo: {
       ...student.contactInfo,
-      email: student.user.email
+      email: student.user ? student.user.email : null // Avoid crashing on null user
     },
-    status: student.user.status,
+    status:  student.user ? student.user.status : null,
     mentalHealthHistory: student.mentalHealthHistory,
     createdAt: student.createdAt
   }));
@@ -192,6 +196,8 @@ exports.getPastSessions = asyncHandler(async (req, res) => {
   res.json(formattedSessions);
 });
 
+
+
 // Enroll New Student
 exports.enrollStudent = asyncHandler(async (req, res) => {
   const psychologist = await Psychologist.findOne({ user: req.user._id });
@@ -201,17 +207,24 @@ exports.enrollStudent = asyncHandler(async (req, res) => {
     throw new Error('Psychologist not found');
   }
 
-  const { personalInfo, academicInfo, contactInfo } = req.body;
+  const { personalInfo, academicInfo, contactInfo,role} = req.body;
+  if (!contactInfo || !contactInfo.email) {
+    return res.status(400).json({ error: "Contact information with an email is required" });
+  }
+  
+  console.log("Request Body:", req.body);
 
   // Create user account for student
   const user = new User({
     email: contactInfo.email,
-    password: Math.random().toString(36).slice(-8), // Generate random password
+    password: '123456', // Generate random password Math.random().toString(36).slice(-8),
     role: 'student',
     status: 'active'
   });
   await user.save();
-
+  if (!user) {
+    throw new Error("User not found, cannot create student");
+  }
   // Create student profile
   const student = new Student({
     user: user._id,
@@ -229,7 +242,8 @@ exports.enrollStudent = asyncHandler(async (req, res) => {
       userId: user._id,
       personalInfo: student.personalInfo,
       academicInfo: student.academicInfo,
-      contactInfo: student.contactInfo
+      contactInfo: student.contactInfo,
+      profileImage:student.personalInfo.profileImage
     }
   });
 });

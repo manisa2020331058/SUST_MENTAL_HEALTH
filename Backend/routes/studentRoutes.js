@@ -15,13 +15,7 @@ const router = express.Router();
 // Dashboard Info Route
 router.get('/dashboard-info', protect, studentOnly, getStudentDashboardInfo);
 
-// Profile Picture Upload
-router.post('/profile-picture', 
-  protect, 
-  studentOnly, 
-  upload.single('profilePicture'), 
-  updateProfilePicture
-);
+
 // routes/studentRoutes.js
 router.get('/verify-psychologist', protect, studentOnly, verifyPsychologistAssignment);
 // Messaging Routes

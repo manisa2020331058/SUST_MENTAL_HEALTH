@@ -1,17 +1,23 @@
 // src/components/HomePage.js
-import React, { useState } from 'react';
+import React, { useEffect,useState,Suspense } from 'react';
+import { 
+  Brain, 
+  HeartPulse 
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import '../styles/HomePage.css';
 import '../styles/Navbar.css';
-import individualCounselingIcon from '../images/counselling.png';
-import workshopsIcon from '../images/workshop.png';
-import stressManagementIcon from '../images/stress_management.png';
+import individualCounselingIcon from '../images/counseling.jpeg';
+import workshopsIcon from '../images/seminar.jpeg';
+import stressManagementIcon from '../images/resource.jpg';
 import psychologist2 from '../images/psychologist2.webp';
 import psychologist3 from '../images/psychologist3.jpg';
+import api from "../utils/api";
 
-// Seminar Card Component
+
+
 const SeminarCard = ({ title, date, time, speaker, location, description }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -59,63 +65,70 @@ const SeminarCard = ({ title, date, time, speaker, location, description }) => {
 };
 
 // Psychologist Card Component
-const PsychologistCard = ({ name, specialization, image, description }) => {
-  return (
-    <div className="psychologist-card">
-      <div className="psychologist-image">
-        <img 
-          src={image} 
-          alt={name} 
-          onError={(e) => {
-            e.target.src = '/path/to/default-image.png'; // Fallback image
-          }}
-        />
-      </div>
-      <div className="psychologist-details">
-        <h3>{name}</h3>
-        <p className="specialization">{specialization}</p>
-        <p className="description">{description}</p>
-      </div>
-    </div>
-  );
+const PsychologistCard = ({ name, specialization, image }) => {
+ return (
+  <div className="psychologist-card">
+  <img 
+    src={image} 
+    alt={`${name}'s profile`}
+    onError={(e) => {
+      e.target.src = '../image/default-avatar.png'; // Fallback image
+    }}
+  />
+  <div className="psychologist-card-info">
+    <h3>{name}</h3>
+    <p>{specialization}</p>
+  </div>
+</div>
+    );
 };
 
 const HomePage = () => {
-  const services = [
-    {
-      icon: individualCounselingIcon,
-      title: 'Individual Counseling',
-      description: 'Personalized one-on-one support tailored to individual mental health needs',
-      details: 'Our confidential counseling provides a safe space to explore personal challenges, develop coping strategies, and promote emotional well-being.'
-    },
-    {
-      icon: workshopsIcon,
-      title: 'Mental Health Workshops',
-      description: 'Interactive group sessions for personal growth and skill development',
-      details: 'Engaging workshops designed to enhance emotional intelligence, stress management, and overall mental resilience.'
-    },
-    {
-      icon: stressManagementIcon,
-      title: 'Stress Management',
-      description: 'Comprehensive strategies to manage academic and personal stress',
-      details: 'Learn evidence-based techniques to reduce anxiety, improve focus, and maintain mental health during challenging academic periods.'
-    }
-  ];
+  const [psychologists, setPsychologists] = useState([]); // Store fetched psychologists
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
 
-  const psychologists = [
+  useEffect(() => {
+    const fetchPsychologists = async () => {
+      try {
+        setLoading(true);
+        const response = await api.admin.getPsychologists(); // Fetch from backend
+        setPsychologists(response.data); // Store the fetched data
+      } catch (error) {
+        setError("Error fetching psychologists: " + error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPsychologists();
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+  const serviceDetails = [
     {
-      name: "Dr. Amina Rahman",
-      specialization: "Clinical Psychologist",
-      image: psychologist2,
-      description: "Specializing in student mental health with 10+ years of experience in university counseling."
+      image: individualCounselingIcon,
+      title: "Individual Counseling",
+      description: "Personalized one-on-one support for students",
+      category: "Support"
     },
     {
-      name: "Dr. Kamal Ahmed",
-      specialization: "Counseling Psychologist",
-      image: psychologist3,
-      description: "Expert in cognitive behavioral therapy and stress management for young adults."
+      image: workshopsIcon,
+      title: "Mental Health Seminars",
+      description: "Educational workshops and awareness programs",
+      category: "Education"
+    },
+    {
+      image:stressManagementIcon,
+      title: "Mental Wellness Resources",
+      description: "Comprehensive support materials and guides",
+      category: "Information"
+  
     }
-  ];
+  ]
+ 
   const seminars = [
     {
       title: "Understanding Student Mental Health",
@@ -148,63 +161,105 @@ const HomePage = () => {
     <div className="homepage">
       <Navbar />
       <div className="content">
-        <section className="hero">
-          <div className="hero-content">
-            <h1>Empowering Mental Wellness at SUST</h1>
-            <p>Comprehensive mental health support for SUST students. Your well-being is our priority.</p>
-            <Link to="/login" className="cta-button">Access Support</Link>
+      <section className="hero">
+      <div className="hero-background"></div>
+      <div className="hero-overlay"></div>
+      <div className="hero-content">
+        <div className="hero-text-container">
+          <div className="hero-decorative-elements">
+            <Brain className="hero-decorator-icon left-icon" />
+            <HeartPulse className="hero-decorator-icon right-icon" />
           </div>
-        </section>
+          
+          <h1 className="hero-title">
+            Empowering Mental Wellness 
+            <br />
+            at <span className="highlight">SUST</span>
+          </h1>
+          
+          <p className="hero-subtitle">
+            Comprehensive mental health support for SUST students. 
+            Your well-being is our priority.
+          </p>
+          
+          <Link to="/login" className="hero-cta-button">
+            Access Support
+          </Link>
+        </div>
+      </div>
+    </section>
 
         <section className="about">
-          <div className="about-content">
-            <h2>About SUST Mental Health Services</h2>
-            <div className="about-grid">
-              <div className="about-text">
-                <p>At Shahjalal University of Science and Technology, we recognize the critical importance of mental health in academic success and personal development. Our dedicated Mental Health Portal provides comprehensive support tailored to the unique challenges faced by university students.</p>
-                <ul className="about-highlights">
-                  <li>Confidential and Professional Counseling</li>
-                  <li>Personalized Mental Health Support</li>
-                  <li>Holistic Approach to Student Well-being</li>
-                  <li>Evidence-Based Intervention Strategies</li>
-                </ul>
-              </div>
-              <div className="about-mission">
-                <h3>Our Mission</h3>
-                <p>To create a supportive environment that promotes mental health awareness, provides accessible counseling services, and empowers students to achieve their full potential.</p>
-              </div>
+      <div className="about-content">
+        <div className="about-frame">
+          <div className="about-frame-content">
+            <div className="about-highlights">
+              <h3>About Our Services</h3>
+              <ul>
+                {[
+                  "Confidential and Professional Counseling",
+                  "Personalized Mental Health Support", 
+                  "Holistic Approach to Student Well-being"
+                ].map((highlight, index) => (
+                  <li key={index}>
+                    <span className="highlight-icon">•</span>
+                    {highlight}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            <div className="about-mission">
+              <h3>Our Mission</h3>
+              <p>To create a supportive environment that promotes mental health awareness, provides accessible counseling services, and empowers students to achieve their full potential.</p>
             </div>
           </div>
-        </section>
+        </div>
+      </div>
+    </section>
 
-        <section className="services">
-          <div className="services-content">
-            <h2>Our Comprehensive Services</h2>
-            <div className="services-grid">
-              {services.map((service, index) => (
-                <div key={index} className="service-card">
-                  <img src={service.icon} alt={service.title} />
+    <section className="services">
+      <div className="services-content">
+        <div className="services-grid">
+          {serviceDetails.map((service, index) => (
+            <div key={index} className="service-card">
+              <div className="service-image-wrapper">
+                <img 
+                  src={service.image} 
+                  alt={service.title} 
+                  className="service-image"
+                />
+                <div className="service-overlay">
                   <h3>{service.title}</h3>
                   <p>{service.description}</p>
-                  <div className="service-hover-details">{service.details}</div>
+                  <span className="service-category">{service.category}</span>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        </section>
+          ))}
+        </div>
+      </div>
+   </section>
 
-        <section className="psychologists">
-          <div className="psychologists-content">
-            <h2>Our Compassionate Psychologists</h2>
-            <div className="psychologists-grid">
-              {psychologists.map((psychologist, index) => (
-                <PsychologistCard key={index} {...psychologist} />
-              ))}
-            </div>
-          </div>
-        </section>
+    <section className="psychologists">
+           <div className="psychologists-section">
+              <h2>Meet Our Psychologists</h2>
+              <Suspense fallback={<div className="loading-grid">Loading...</div>}>
+             <div className="psychologist-grid">
+               {psychologists.map((psych) => (
+                <PsychologistCard 
+                 key={psych._id}
+                 name={psych.personalInfo.name}
+                 specialization={psych.professionalInfo.specialization}
+                 
+               />
+                ))}
+             </div>
+             </Suspense>
+           </div>
+    </section>
 
-        <section className="seminars">
+    <section className="seminars">
         <div className="seminars-content">
           <h2>Upcoming Mental Health Seminars</h2>
           <div className="seminars-grid">
@@ -213,7 +268,7 @@ const HomePage = () => {
             ))}
           </div>
         </div>
-      </section>
+     </section>
       </div>
       <Footer />
     </div>

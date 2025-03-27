@@ -20,24 +20,140 @@ body {
 }
 
 .hero {
-  background-color: #278cb4; /* Lavender hero background */
-  color: #fff;
-  padding: 40px;
-  text-align: center;
-  border-radius: 10px;
-  margin-bottom: 20px;
+  position: relative;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  color: white;
 }
 
-.hero h1 {
-  font-size: 2.5em;
-  margin-bottom: 10px;
+.hero-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #e6bc34, #274e02);
+  background-size: cover;
+  background-position: center;
+  z-index: -2;
 }
 
-.hero p {
-  font-size: 1.2em;
-  margin-bottom: 20px;
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: -1;
 }
 
+.hero-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  position: relative;
+}
+
+.hero-text-container {
+  max-width: 700px;
+  position: relative;
+}
+
+.hero-decorative-elements {
+  position: absolute;
+  width: 100%;
+  top: -4rem;
+}
+
+.hero-decorator-icon {
+  position: absolute;
+  width: 3rem;
+  height: 3rem;
+  color: rgba(223, 243, 107, 0.7);
+  opacity: 0.6;
+}
+
+.left-icon {
+  left: -4rem;
+  animation: float-left 3s ease-in-out infinite alternate;
+}
+
+.right-icon {
+  right: -4rem;
+  animation: float-right 3s ease-in-out infinite alternate;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  line-height: 1.2;
+}
+
+.highlight {
+  color: #b2de4a;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.hero-cta-button {
+  display: inline-block;
+  background-color: #b2de4a;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+}
+
+.hero-cta-button:hover {
+  background-color: #f7e654;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+}
+
+@keyframes float-left {
+  from {
+    transform: translateY(0) rotate(-5deg);
+  }
+  to {
+    transform: translateY(-20px) rotate(5deg);
+  }
+}
+
+@keyframes float-right {
+  from {
+    transform: translateY(-10px) rotate(5deg);
+  }
+  to {
+    transform: translateY(0) rotate(-5deg);
+  }
+}
+
+@media (max-width: 1024px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .hero-decorator-icon {
+    display: none;
+  }
+}
 .cta-button {
   background-color: #fff;
   color: #7e57c2;
@@ -51,63 +167,182 @@ body {
 .cta-button:hover {
   background-color: #e1bee7;
 }
-
-.about, .services {
-  background-color: #fff;
-  padding: 40px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.about {
+  position: relative;
+  background-image: url('../images/about-background2.webp');
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.about h2, .services h2 {
-  color: #579bc2;
-  margin-bottom: 20px;
+.about-content {
+  width: 100%;
+  max-width: 1200px;
+  padding: 2rem;
 }
 
+.about-frame {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.125);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  padding: 3rem;
+  color: rgb(0, 0, 0);
+}
+
+.about-frame-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.about-highlights h3,
+.about-mission h3 {
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+  color: rgb(5, 54, 68);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 0.5rem;
+  text-align: center;
+}
+
+.about-highlights ul {
+  list-style: none;
+  padding: 0;
+}
+
+.about-highlights li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.highlight-icon {
+  margin-right: 1rem;
+  color: #b9e744;
+  font-size: 1.5rem;
+}
+
+.about-mission p {
+  font-size: 1rem;
+  line-height: 1.6;
+  background-color: rgb(255, 255, 255);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .about-frame-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .about-frame {
+    padding: 2rem;
+  }
+}
+
+.services {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background: linear-gradient(135deg, #fafaf8, #dfe7bd);
+  color: white;
+}
+
+.services-content {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 0rem;
+}
 
 .services-grid {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4rem;
 }
 
 .service-card {
-  flex: 1;
-  text-align: center;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
-  background-color: #3691af;
-}
-
-.service-card:hover {
-  transform: translateY(-15px);
-  box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-}
-
-.service-card img {
-  width: 200px;  /* Increased size */
-  height: 200px; /* Increased size */
-  margin-bottom: 20px;
-  object-fit: contain; /* Ensures image maintains aspect ratio */
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 50px;
+  border: 2px solid rgba(255, 255, 255, 0.125);
+  padding: 1.5rem;
   transition: transform 0.3s ease;
 }
 
-.service-card:hover img {
-  transform: scale(1.1); /* Slight zoom effect on hover */
+.service-card:hover {
+  transform: scale(1.05);
 }
 
-.service-card h3 {
-  margin-bottom: 15px;
-  font-size: 1.5em;
-  color: #333;
+.service-image-wrapper {
+  position: relative;
+  border-radius: 12px;
+ /* overflow: hidden;*/
 }
 
-.service-card p {
-  color: #666;
-  line-height: 1.6;
+.service-image {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.service-overlay {
+  position: relative;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(8, 8, 8, 0.8), rgba(20, 15, 15, 0));
+  color: white;
+  padding: 1.5rem;
+  /*transform: translateY(100%);*/
+  transition: transform 0.3s ease;
+}
+
+.service-card:hover .service-overlay {
+  transform: translateY(0);
+}
+
+.service-overlay h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.service-overlay p {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 0.5rem;
+}
+
+.service-category {
+  display: inline-block;
+  background-color: #debc4a;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .services {
+    height: auto;
+    padding: 4rem 0;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .seminars-list {
   display: flex;
@@ -143,65 +378,7 @@ body {
   margin-top: 10px;
   cursor: pointer;
 }
-/* src/styles/HomePage.css */
-/* ... existing styles ... */
 
-.about-grid {
-  display: flex;
-  gap: 30px;
-  align-items: center;
-}
-
-.about-text, .about-mission {
-  flex: 1;
-  background-color: #f9f9f9;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.about-highlights {
-  list-style-type: none;
-  padding: 0;
-  margin-top: 15px;
-}
-
-.about-highlights li {
-  position: relative;
-  padding-left: 25px;
-  margin-bottom: 10px;
-}
-
-.about-highlights li::before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  color: #4a90e2;
-  font-weight: bold;
-}
-
-.service-card {
-  position: relative;
-  overflow: hidden;
-}
-
-.service-hover-details {
-  display: none;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: rgba(0,0,0,0.7);
-  color: white;
-  padding: 15px;
-  transform: translateY(100%);
-  transition: transform 0.3s ease;
-}
-
-.service-card:hover .service-hover-details {
-  display: block;
-  transform: translateY(0);
-}
 
 .psychologists-grid {
   display: flex;
@@ -209,12 +386,44 @@ body {
   justify-content: center;
 }
 
+.home-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.home-page h2 {
+  color: #333;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.home-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.psychologists-section {
+  text-align: center;
+}
+
+.psychologists-section h2 {
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.psychologist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
 .psychologist-card {
-  position: relative;
-  width: 300px;
-  border-radius: 10px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   transition: transform 0.3s ease;
 }
 
@@ -222,47 +431,29 @@ body {
   transform: scale(1.05);
 }
 
-.psychologist-image img {
+.psychologist-card img {
   width: 100%;
   height: 300px;
   object-fit: cover;
 }
 
-.psychologist-details {
+.psychologist-card-info {
   padding: 15px;
-  background-color: #f9f9f9;
   text-align: center;
 }
 
-.psychologist-details .hover-details {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.8);
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 15px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+.psychologist-card-info h3 {
+  margin: 0 0 10px;
+  color: #333;
+  font-size: 1.1em;
 }
 
-.psychologist-details.hovered .hover-details {
-  opacity: 1;
+.psychologist-card-info p {
+  margin: 0;
+  color: #666;
+  font-style: italic;
 }
 
-.book-session-btn {
-  margin-top: 15px;
-  padding: 10px 20px;
-  background-color: #4a90e2;
-  color: white;
-  text-decoration: none;
-  border-radius: 5px;
-}
 /* Add to existing HomePage.css */
 .seminars {
   background-color: #f4f7f6;
@@ -393,4 +584,26 @@ body {
   .seminars-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.psychologists,
+.seminars {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.psychologist-grid,
+.seminars-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  grid-auto-rows: 1fr; /* Equal height rows */
+}
+
+.psychologist-card,
+.seminar-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Full height of grid cell */
 }

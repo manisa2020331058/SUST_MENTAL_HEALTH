@@ -15,6 +15,8 @@ connectDB();
 // Create Express app
 const app = express();
 
+
+
 // Middleware
 app.use(cors()); 
 app.use(express.urlencoded({ extended: true }));
@@ -38,7 +40,6 @@ app.get('/', (req, res) => {
     ]
   });
 });
-
 // Routes
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
@@ -60,6 +61,7 @@ app.use(notFound);
 
 // Error Middleware
 app.use(errorHandler);
+app.use(express.urlencoded({ extended: true }));
 
 
 // Port configuration

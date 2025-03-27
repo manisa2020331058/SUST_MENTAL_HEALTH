@@ -1,110 +1,126 @@
-/* src/styles/Navbar.css */
 .navbar-sust {
-  background-color: #000; /* Black background */
-  color: white;
-  height: 80px;
-  display: flex;
-  align-items: center;
   position: fixed;
-  width: 100%;
   top: 0;
-  z-index: 1000;
-  box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+  left: 0;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+  z-index: 100;
 }
 
 .navbar-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0.75rem 1.5rem;
 }
 
 .navbar-logo {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 1rem;
 }
 
 .logo-box {
-  background-color: white;
+  width: 70px;
+  height: 70px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 5px;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  justify-content: center;
+  background-color: #f0f4f8;
+  border-radius: 10px;
+  transition: transform 0.3s ease;
+}
+
+.logo-box:hover {
+  transform: scale(1.05);
 }
 
 .sust-logo {
-  height: 50px; /* Slightly smaller to fit in the box */
-  width: auto;
+  max-width: 55px;
+  max-height: 55px;
+  object-fit: contain;
 }
 
 .university-name {
-  font-size: 1.2em;
-  font-weight: bold;
-  color: white;
-  margin-left: 15px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
 }
 
 .navbar-menu {
   display: flex;
+  align-items: center;
   list-style: none;
-  gap: 20px;
   margin: 0;
   padding: 0;
-  align-items: center;
+  gap: 1.5rem;
 }
 
 .navbar-menu li a {
-  color: rgba(255,255,255,0.8);
   text-decoration: none;
-  transition: all 0.3s ease;
+  color: #2c3e50;
   font-weight: 500;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.navbar-menu li a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -5px;
+  left: 0;
+  background-color: #bb9b0c;
+  transition: width 0.3s ease;
 }
 
 .navbar-menu li a:hover {
-  color: #4a90e2; /* Bright blue for hover */
-  transform: scale(1.05);
+  color: #e69934;
 }
 
-.login-button {
-  background-color: #4a90e2;
-  color: white !important;
-  padding: 8px 15px;
-  border-radius: 5px;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
+.navbar-menu li a:hover::after {
+  width: 100%;
 }
 
-.login-button:hover {
-  background-color: #357abd;
+.login-but {
+  background-color: #e6b734;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(37, 42, 46, 0.2);
+}
+
+.login-but:hover {
+  background-color: #f0ee8f;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(44, 62, 80, 0.2);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .navbar-container {
     flex-direction: column;
-    height: auto;
-    padding: 10px;
+    padding: 1rem;
   }
 
   .navbar-logo {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .university-name {
-    margin-left: 0;
-    margin-top: 10px;
-    font-size: 1em;
+    margin-bottom: 1rem;
   }
 
   .navbar-menu {
     flex-direction: column;
-    margin-top: 10px;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .university-name {
+    text-align: center;
+    font-size: 1.5rem;
   }
 }

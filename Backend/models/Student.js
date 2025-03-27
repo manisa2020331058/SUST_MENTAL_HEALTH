@@ -2,11 +2,11 @@
 const mongoose = require('mongoose');
 
 const StudentSchema = new mongoose.Schema({
-  user: {
+   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    unique: true
+
   },
   personalInfo: {
     name: {
@@ -35,6 +35,19 @@ const StudentSchema = new mongoose.Schema({
       name: String,
       relationship: String,
       phone: String
+    },
+    profileImage: { 
+      type: String, 
+      default: '../images/default-avatar.png', // Default image path
+      validate: {
+        validator: function(v) {
+          // Optional: Add URL validation if needed
+          return v === null || 
+                 v === '' || 
+                 /^(https?:\/\/.*\.(png|jpg|jpeg|gif|webp))/i.test(v);
+        },
+        message: 'Invalid image URL'
+      }
     }
   },
   contactInfo: {
@@ -52,17 +65,13 @@ const StudentSchema = new mongoose.Schema({
     },
     alternatePhone: {
       type: String,
-      trim: true
+     
     },
     address: {
-      current: {
+      
         type: String,
-        trim: true
-      },
-      permanent: {
-        type: String,
-        trim: true
-      }
+        required: true
+      
     },
     communicationPreference: {
       type: String,
@@ -82,10 +91,6 @@ const StudentSchema = new mongoose.Schema({
       required: [true, 'Department is required'],
       trim: true
     },
-    faculty: {
-      type: String,
-      trim: true
-    },
     program: {
       type: String,
       trim: true
@@ -98,23 +103,11 @@ const StudentSchema = new mongoose.Schema({
       type: Number,
       min: 1
     },
-    cgpa: {
-      type: Number,
-      min: 0,
-      max: 4
-    },
     academicStatus: {
       type: String,
       enum: ['Regular', 'Irregular', 'Probation'],
       default: 'Regular'
     },
-    scholarshipStatus: {
-      hasScholarship: {
-        type: Boolean,
-        default: false
-      },
-      scholarshipDetails: String
-    }
   },
   mentalHealthHistory: {
     previousCounseling: {
@@ -163,8 +156,8 @@ const StudentSchema = new mongoose.Schema({
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'Psychologist',
+   // required: true
   },
   createdAt: {
     type: Date,

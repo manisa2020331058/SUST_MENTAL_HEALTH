@@ -4,7 +4,7 @@ const User = require('../models/User');
 const Admin = require('../models/Admin');
 const Psychologist = require('../models/Psychologist');
 const Student = require('../models/Student');
-
+const { psychologistProfilePicUpload } = require('../middleware/multerMiddleware');
 // Create Initial Admin (One-time setup)
 exports.createInitialAdmin = asyncHandler(async (req, res) => {
   const { email, password, name } = req.body;
@@ -97,20 +97,20 @@ exports.hasPermission = (requiredPermission) => {
 };
 
 // Enroll Psychologist
-exports.enrollPsychologist = asyncHandler(async (req, res) => {
-  const { email, password, personalInfo, professionalInfo, contactInfo, permissions } = req.body;
-
-  // Check if psychologist already exists
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    res.status(400);
-    throw new Error('Psychologist with this email already exists');
+exports.enrollPsychologist = [ psychologistProfilePicUpload.single('profilePicture'),asyncHandler(async (req, res) => {
+  const { email, password, personalInfo, professionalInfo, contactInfo, permissions, role,profileImage } = req.body;
+  if (!contactInfo || !contactInfo.email) {
+    return res.status(400).json({ error: "Contact information with an email is required" });
   }
-
+  const profilePicPath = req.file 
+  ? req.file.path.replace(process.cwd(), '') // Remove absolute path 
+  : null;
+  
+ 
   // Create user
   const user = new User({
-    email,
-    password,
+    email:contactInfo.email,
+    password:'123456',
     role: 'psychologist',
     status: 'active',
     createdBy: req.user._id, // Admin who created the psychologist
@@ -124,7 +124,8 @@ exports.enrollPsychologist = asyncHandler(async (req, res) => {
     personalInfo,
     professionalInfo,
     contactInfo,
-    permissions // Store permissions in the database
+    permissions ,// Store permissions in the
+    profileImage:profilePicPath
   });
   await psychologist.save();
 
@@ -138,12 +139,13 @@ exports.enrollPsychologist = asyncHandler(async (req, res) => {
       qualifications: psychologist.professionalInfo.qualifications,
       yearsOfExperience: psychologist.professionalInfo.yearsOfExperience,
       email: psychologist.contactInfo.email,
+      profileImage:psychologist.personalInfo.profileImage,
       phoneNumber: psychologist.contactInfo.phoneNumber,
       officeLocation: psychologist.contactInfo.officeLocation,
       permissions: psychologist.permissions
     }
   });
-});
+})];
 
 // Get Admin Profile
 exports.getAdminProfile = asyncHandler(async (req, res) => {
@@ -271,7 +273,7 @@ exports.updatePsychologistProfile = asyncHandler(async (req, res) => {
   const { personalInfo, professionalInfo, contactInfo, availabilitySchedule, status } = req.body;
 
   // Find psychologist
-  const psychologist = await Psychologist.findById(psychologistId);
+  const psychologist = await Psychologist.findById(contactInfo.email);
   
   if (!psychologist) {
     res.status(404);
