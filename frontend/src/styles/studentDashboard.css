@@ -1,0 +1,503 @@
+/* Student Dashboard Styles */
+.student-dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f4f7f6;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Dashboard Section */
+.dashboard-section {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+  padding: 25px;
+  transition: all 0.3s ease;
+}
+
+.dashboard-section:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Profile Container */
+.profile-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 30px;
+}
+
+/* Profile Picture Upload */
+.profile-picture-upload {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border: 3px dashed #e0e0e0;
+  border-radius: 10%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.profile-picture-label {
+  position: absolute;
+  top: -25px;
+  left: 0;
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+}
+
+.profile-picture-input {
+  display: none;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-align: center;
+  color: #888;
+  padding: 20px;
+  width: 100%;
+  height: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.upload-placeholder:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+.upload-icon {
+  font-size: 40px;
+  color: #e0e0e0;
+  margin-bottom: 10px;
+}
+
+.profile-picture-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-image-btn {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(255, 0, 0, 0.7);
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.remove-image-btn:hover {
+  background-color: rgba(255, 0, 0, 0.9);
+}
+
+/* Profile Details */
+.profile-details {
+  flex-grow: 1;
+}
+
+.profile-details h2 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 24px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.info-group {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+  transition: transform 0.3s ease;
+}
+
+.info-group:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.info-group h3 {
+  margin-bottom: 10px;
+  color: #007bff;
+  font-size: 16px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 5px;
+}
+
+.info-group p {
+  margin-bottom: 5px;
+  color: #666;
+}
+
+
+
+
+/* Chat Widget */
+.chat-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.chat-trigger {
+  position: relative;
+  background-color: #007bff;
+  color: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.chat-trigger:hover {
+  background-color: #0056b3;
+}
+
+.chat-notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.chat-modal {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 350px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.chat-header {
+  background-color: #007bff;
+  color: white;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-messages {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 15px;
+}
+
+.chat-input {
+  display: flex;
+  padding: 10px;
+  background-color: #f1f1f1;
+}
+
+.chat-input textarea {
+  flex-grow: 1;
+  margin-right: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  resize: none;
+}
+
+.chat-input button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+}
+
+/* Sessions Section */
+.upcoming-sessions-section h2 {
+  color: #333;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+.past-sessions-section h2 {
+  color: #333;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+
+.sessions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.session-card {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.session-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  text-transform: capitalize;
+}
+.profile-picture-container {
+  position: relative;
+}
+
+.profile-picture-actions {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  gap: 10px;
+}
+/* Add to your studentDashboard.css */
+
+/* Session Notification Banner */
+.session-notification-banner {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  max-width: 350px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 15px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease-out forwards;
+  border-left: 4px solid #4e73df;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.notification-content {
+  margin-bottom: 10px;
+}
+
+.notification-content h3 {
+  margin: 0 0 10px 0;
+  color: #4e73df;
+  font-size: 1.1rem;
+}
+
+.notification-item {
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.notification-item p {
+  margin: 5px 0;
+  font-size: 0.9rem;
+}
+
+.close-notification {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.close-notification:hover {
+  color: #333;
+}
+
+/* Enhanced Session Cards */
+.session-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin-bottom: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.session-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.session-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.session-type-badge {
+  font-size: 0.7rem;
+  background-color: #e8f4fd;
+  color: #3498db;
+  padding: 3px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+.status-badge {
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.status-badge.scheduled {
+  background-color: #e8f7ef;
+  color: #27ae60;
+}
+
+.status-badge.completed {
+  background-color: #eee;
+  color: #777;
+}
+
+.status-badge.cancelled {
+  background-color: #ffe0e0;
+  color: #e74c3c;
+}
+
+.session-datetime {
+  margin-bottom: 10px;
+}
+
+.session-location, .session-description {
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+
+/* Add to your studentDashboard.css file if not already there */
+
+.session-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.session-action-btn {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  border: none;
+  background-color: #4e73df;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.session-action-btn:hover {
+  background-color: #375bcb;
+}
+
+.session-action-btn.secondary {
+  background-color: #f8f9fc;
+  color: #4e73df;
+  border: 1px solid #4e73df;
+}
+
+.session-action-btn.secondary:hover {
+  background-color: #eaecf4;
+}
+
+
+
+.no-sessions-message {
+  text-align: center;
+  color: #777;
+  padding: 20px;
+  background-color: #f8f9fc;
+  border-radius: 8px;
+}
+
+.edit-profile-picture,
+.remove-profile-picture {
+  background-color: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
