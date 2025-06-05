@@ -1,19 +1,17 @@
 // controllers/studentController.js
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
+const { studentProfilePicUpload } = require('../middleware/multerMiddleware');
 
 const asyncHandler = require('express-async-handler');
 const Student = require('../models/Student');
 const Session = require('../models/Session');
 const Message = require('../models/Message');
+const User = require('../models/User');
 const Psychologist = require('../models/Psychologist'); // Added Psychologist model
+const { profile } = require('console');
+const path = require('path');
 
-// Cloudinary Configuration
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
 
 // Get Comprehensive Student Profile
 // controllers/studentController.js
@@ -42,8 +40,9 @@ exports.getStudentDashboardInfo = asyncHandler(async (req, res) => {
       
       if (psychologist) {
         psychologistData = {
-          psychologistId: psychologist._id,     // Psychologist model ID
-          userId: psychologist.user._id,        // User model ID of psychologist
+          psychologistId: psychologist._id,
+          profileImage: psychologist.personalInfo?.profileImage,
+          userId: psychologist.user._id,
           name: psychologist.personalInfo?.name,
           specialization: psychologist.professionalInfo?.specialization,
           email: psychologist.user?.email,
@@ -62,53 +61,64 @@ exports.getStudentDashboardInfo = asyncHandler(async (req, res) => {
           path: 'user',
           select: 'email'
         }
-      })
-      .sort({ 'sessionDetails.date': 1 });
+      });
 
     const currentDate = new Date();
-    const pastSessions = sessions.filter(session => 
+    
+    // Map sessions to a consistent format
+    const formattedSessions = sessions.map(session => {
+      // Extract start time and calculate end time based on duration
+      const startTime = session.time || '00:00';
+      const duration = session.duration || 60; // Default to 60 minutes
+      
+      // Calculate end time
+      const [hours, minutes] = startTime.split(':').map(Number);
+      const endTime = new Date(0, 0, 0, hours, minutes + duration);
+      const formattedEndTime = `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`;
+      
+      return {
+        sessionId: session._id,
+        psychologist: {
+          psychologistId: session.psychologist?._id,
+          userId: session.psychologist?.user?._id,
+          name: session.psychologist?.personalInfo?.name,
+          email: session.psychologist?.user?.email
+        },
+        sessionDetails: {
+          date: session.date,
+          startTime: startTime,
+          endTime: formattedEndTime,
+          duration: duration,
+          type: session.type
+        },
+        status: session.status,
+        notes: session.notes,
+        feedback: session.feedback
+      };
+    });
+    
+    // Split into past and upcoming sessions
+    const pastSessions = formattedSessions.filter(session => 
       new Date(session.sessionDetails.date) < currentDate
     );
-    const upcomingSessions = sessions.filter(session => 
+    
+    const upcomingSessions = formattedSessions.filter(session => 
       new Date(session.sessionDetails.date) >= currentDate
     );
 
     // Include all relevant IDs in the response
     const responseData = {
       studentProfile: {
-        studentId: student._id,           // Student model ID
-        userId: student.user._id,         // User model ID
+        studentId: student._id,
+        userId: student.user._id,
         personalInfo: student.personalInfo || {},
         academicInfo: student.academicInfo || {},
         contactInfo: student.contactInfo || {},
-        profilePicture: student.profilePicture,
         status: student.status || 'Active'
       },
-      createdBy: psychologistData,        // Contains both psychologist and user IDs
-      pastSessions: pastSessions.map(session => ({
-        sessionId: session._id,           // Session model ID
-        psychologist: {
-          psychologistId: session.psychologist._id,  // Psychologist model ID
-          userId: session.psychologist.user._id,     // User model ID
-          name: session.psychologist.personalInfo?.name,
-          email: session.psychologist.user?.email
-        },
-        sessionDetails: session.sessionDetails,
-        status: session.status,
-        notes: session.notes,
-        feedback: session.feedback
-      })),
-      upcomingSessions: upcomingSessions.map(session => ({
-        sessionId: session._id,           // Session model ID
-        psychologist: {
-          psychologistId: session.psychologist._id,  // Psychologist model ID
-          userId: session.psychologist.user._id,     // User model ID
-          name: session.psychologist.personalInfo?.name,
-          email: session.psychologist.user?.email
-        },
-        sessionDetails: session.sessionDetails,
-        status: session.status
-      }))
+      createdBy: psychologistData,
+      pastSessions: pastSessions,
+      upcomingSessions: upcomingSessions
     };
 
     res.json(responseData);
@@ -120,132 +130,65 @@ exports.getStudentDashboardInfo = asyncHandler(async (req, res) => {
     });
   }
 });
-
 // Update Profile Picture
 exports.updateProfilePicture = asyncHandler(async (req, res) => {
-  // Check if file is uploaded
-  if (!req.file) {
-    res.status(400);
-    throw new Error('No file uploaded');
+  // Check if base64 image is uploaded
+  if (!req.body.personalInfo.profileImage) {
+    return res.status(400).json({ 
+      error: 'No profile image provided' 
+    });
   }
 
   // Find student
   const student = await Student.findOne({ user: req.user._id });
 
   if (!student) {
-    res.status(404);
-    throw new Error('Student not found');
+    return res.status(404).json({ 
+      error: 'Student not found' 
+    });
   }
 
   try {
-    // Cloudinary upload
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'sust-mental-health/student-profiles',
-      public_id: `${student._id}_profile_pic`,
-      overwrite: true,
-      transformation: [
-        { width: 500, height: 500, crop: "limit" },
-        { quality: "auto" }
-      ]
-    });
+    // Upload base64 image
+    const profilePicPath = studentProfilePicUpload.uploadBase64Image(req.body.personalInfo.profileImage);
 
-    // Update student profile
-    student.profilePicture = result.secure_url;
-    await student.save();
-
-    // Remove temporary file
-    fs.unlinkSync(req.file.path);
-
-    res.json({
-      message: 'Profile picture updated successfully',
-      profilePicture: result.secure_url
-    });
-  } catch (error) {
-    // Remove temporary file in case of upload error
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+    if (!profilePicPath) {
+      return res.status(400).json({ 
+        error: 'Failed to upload profile picture' 
+      });
     }
 
-    console.error('Cloudinary Upload Error:', error);
-    res.status(500);
-    throw new Error('Failed to upload profile picture');
+    // Ensure personalInfo exists before assigning profileImage
+    if (!student.personalInfo) {
+      student.personalInfo = {}; 
+    }
+    
+    student.personalInfo.profileImage = profilePicPath;
+    await student.save();
+
+    // Update user profile image if needed
+    const user = await User.findById(student.user);
+    if (user) {
+      user.profileImage = profilePicPath;
+      await user.save();
+    }
+
+    res.status(200).json({
+      message: 'Profile picture updated successfully',
+      profileImage: profilePicPath
+    });
+  } catch (error) {
+    console.error('Profile Picture Upload Error:', error);
+
+    res.status(500).json({ 
+      error: 'Failed to upload profile picture',
+      details: error.message 
+    });
   }
 });
 
-// Create Message to Psychologist
-exports.sendMessageToPsychologist = asyncHandler(async (req, res) => {
-  // Validate message content
-  const { message } = req.body;
-  if (!message || message.trim() === '') {
-    res.status(400);
-    throw new Error('Message content is required');
-  }
 
-  // Find student and check assigned psychologist
-  const student = await Student.findOne({ user: req.user._id });
 
-  if (!student) {
-    res.status(404);
-    throw new Error('Student not found');
-  }
-
-  if (!student.createdBy) {
-    res.status(400);
-    throw new Error('No psychologist assigned');
-  }
-
-  // Create message
-  const newMessage = new Message({
-    sender: req.user._id,
-    senderModel: 'Student',
-    receiver: student.createdBy,
-    receiverModel: 'Psychologist',
-    content: message.trim()
-  });
-
-  await newMessage.save();
-
-  res.status(201).json({
-    message: 'Message sent successfully',
-    messageDetails: newMessage
-  });
-});
-
-// Get Messages with Psychologist
-exports.getMessagesWithPsychologist = asyncHandler(async (req, res) => {
-  // Find student
-  const student = await Student.findOne({ user: req.user._id });
-
-  if (!student) {
-    res.status(404);
-    throw new Error('Student not found');
-  }
-
-  // If no psychologist assigned, return empty array
-  if (!student.createdBy) {
-    return res.json([]);
-  }
-
-  // Fetch messages
-  const messages = await Message.find({
-    $or: [
-      { 
-        sender: req.user._id, 
-        receiver: student.createdBy,
-        senderModel: 'Student',
-        receiverModel: 'Psychologist'
-      },
-      { 
-        sender: student.createdBy, 
-        receiver: req.user._id,
-        senderModel: 'Psychologist',
-        receiverModel: 'Student'
-      }
-    ]
-  }).sort({ createdAt: 1 });
-
-  res.json(messages);
-});
 // In studentController.js or a separate utility file
 exports.verifyPsychologistAssignment = asyncHandler(async (req, res) => {
   const student = await Student.findOne({ user: req.user._id });
@@ -267,4 +210,106 @@ exports.verifyPsychologistAssignment = asyncHandler(async (req, res) => {
     assignedPsychologistId: student.createdBy,
     directCheckResult: directCheck
   });
+});
+
+exports.removeProfilePicture = asyncHandler(async (req, res) => {
+  try {
+    // Find student
+    const student = await Student.findOne({ user: req.user._id });
+
+    if (!student) {
+      return res.status(404).json({ 
+        message: 'Student not found' 
+      });
+    }
+
+    // Check if there's an existing profile picture
+    if (student.personalInfo.profileImage) {
+      // Optional: Remove the physical file
+      const fullPath = path.join(process.cwd(), student.personalInfo.profileImage);
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+
+      // Clear profile picture in database
+      student.personalInfo.profileImage = null;
+      await student.save();
+    }
+
+    res.json({
+      message: 'Profile picture removed successfully',
+      profilePicture: null
+    });
+  } catch (error) {
+    console.error('Remove Profile Picture Error:', error);
+    res.status(500).json({ 
+      message: 'Failed to remove profile picture',
+      error: error.message 
+    });
+  }
+});
+
+// controllers/studentController.js - Add this function
+
+// Get upcoming session notifications
+exports.getSessionNotifications = asyncHandler(async (req, res) => {
+  try {
+    const student = await Student.findOne({ user: req.user._id });
+    
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    
+    // Get upcoming sessions in the next 24 hours
+    const tomorrow = new Date();
+    tomorrow.setHours(tomorrow.getHours() + 24); // 24 hours from now
+    
+    const upcomingSessions = await Session.find({
+      student: student._id,
+      date: { $gte: new Date(), $lte: tomorrow },
+      status: 'scheduled'
+    }).populate({
+      path: 'psychologist',
+      select: 'personalInfo contactInfo'
+    }).sort({ date: 1 });
+    
+    // Format sessions with proper details
+    const notifications = upcomingSessions.map(session => {
+      // Format date and time for easy display
+      const sessionDate = new Date(session.date);
+      const formattedDate = sessionDate.toLocaleDateString();
+      
+      // Calculate time until session
+      const now = new Date();
+      const hoursUntilSession = Math.floor((sessionDate - now) / (1000 * 60 * 60));
+      const minutesUntilSession = Math.floor(((sessionDate - now) % (1000 * 60 * 60)) / (1000 * 60));
+      
+      return {
+        sessionId: session._id,
+        title: `Upcoming Session with ${session.psychologist.personalInfo?.name || 'your psychologist'}`,
+        date: formattedDate,
+        time: session.time,
+        type: session.type,
+        location: session.psychologist.contactInfo?.officeLocation || 'Online',
+        psychologistName: session.psychologist.personalInfo?.name,
+        contactInfo: session.psychologist.contactInfo,
+        timeUntil: {
+          hours: hoursUntilSession,
+          minutes: minutesUntilSession,
+          text: `${hoursUntilSession} hours and ${minutesUntilSession} minutes`
+        }
+      };
+    });
+    
+    res.json({
+      count: notifications.length,
+      notifications
+    });
+  } catch (error) {
+    console.error('Error fetching session notifications:', error);
+    res.status(500).json({ 
+      message: 'Error fetching session notifications',
+      error: error.message
+    });
+  }
 });

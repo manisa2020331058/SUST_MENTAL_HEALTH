@@ -10,7 +10,7 @@ const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // Public Routes
-router.post('/login', loginUser);
+router.post('/login', loginUser);//api/users/login
 
 // Protected Routes
 router.put('/change-password', protect, changePassword);

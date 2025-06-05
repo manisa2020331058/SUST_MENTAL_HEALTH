@@ -49,6 +49,11 @@ const UserSchema = new mongoose.Schema({
     userAgent: String,
     location: String
   }],
+   profileImage: { 
+    type: String, 
+    default: '../images/default-avatar.png', // Default image path
+    
+  },
   failedLoginAttempts: {
     type: Number,
     default: 0

@@ -39,15 +39,7 @@ const StudentSchema = new mongoose.Schema({
     profileImage: { 
       type: String, 
       default: '../images/default-avatar.png', // Default image path
-      validate: {
-        validator: function(v) {
-          // Optional: Add URL validation if needed
-          return v === null || 
-                 v === '' || 
-                 /^(https?:\/\/.*\.(png|jpg|jpeg|gif|webp))/i.test(v);
-        },
-        message: 'Invalid image URL'
-      }
+      
     }
   },
   contactInfo: {

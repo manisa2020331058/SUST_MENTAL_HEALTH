@@ -97,15 +97,15 @@ exports.hasPermission = (requiredPermission) => {
 };
 
 // Enroll Psychologist
-exports.enrollPsychologist = [ psychologistProfilePicUpload.single('profilePicture'),asyncHandler(async (req, res) => {
+exports.enrollPsychologist = asyncHandler(async (req, res) => {
   const { email, password, personalInfo, professionalInfo, contactInfo, permissions, role,profileImage } = req.body;
   if (!contactInfo || !contactInfo.email) {
     return res.status(400).json({ error: "Contact information with an email is required" });
   }
-  const profilePicPath = req.file 
-  ? req.file.path.replace(process.cwd(), '') // Remove absolute path 
+
+  const profilePicPath = personalInfo.profileImage 
+  ? psychologistProfilePicUpload.uploadBase64Image(personalInfo.profileImage)
   : null;
-  
  
   // Create user
   const user = new User({
@@ -114,18 +114,23 @@ exports.enrollPsychologist = [ psychologistProfilePicUpload.single('profilePictu
     role: 'psychologist',
     status: 'active',
     createdBy: req.user._id, // Admin who created the psychologist
-    creatorModel: 'Admin'
+    creatorModel: 'Admin',
+    profileImage:profilePicPath
   });
   await user.save();
 
   // Create psychologist profile with permissions
   const psychologist = new Psychologist({
     user: user._id,
-    personalInfo,
+    
+    personalInfo: {
+      ...personalInfo,
+      profileImage: profilePicPath  // Save profile picture path to psychologist
+    },
     professionalInfo,
     contactInfo,
     permissions ,// Store permissions in the
-    profileImage:profilePicPath
+    profileImage:profilePicPath,
   });
   await psychologist.save();
 
@@ -139,13 +144,13 @@ exports.enrollPsychologist = [ psychologistProfilePicUpload.single('profilePictu
       qualifications: psychologist.professionalInfo.qualifications,
       yearsOfExperience: psychologist.professionalInfo.yearsOfExperience,
       email: psychologist.contactInfo.email,
-      profileImage:psychologist.personalInfo.profileImage,
+      profileImage:profilePicPath,
       phoneNumber: psychologist.contactInfo.phoneNumber,
       officeLocation: psychologist.contactInfo.officeLocation,
-      permissions: psychologist.permissions
+      permissions: psychologist.permissions,
     }
   });
-})];
+});
 
 // Get Admin Profile
 exports.getAdminProfile = asyncHandler(async (req, res) => {
@@ -198,22 +203,58 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
 
 // Get All Psychologists
 exports.getPsychologists = asyncHandler(async (req, res) => {
-  const psychologists = await Psychologist.find()
-    .populate('user', 'email status');
+  try {
+    const psychologists = await Psychologist.find()
+      .populate('user', 'email status');
 
-  const formattedPsychologists = psychologists.map(psych => ({
-    _id: psych._id,
-    personalInfo: psych.personalInfo,
-    professionalInfo: psych.professionalInfo,
-    contactInfo: {
-      ...psych.contactInfo,
-      email: psych.user.email
-    },
-    status: psych.user.status,
-    availabilitySchedule: psych.availabilitySchedule
-  }));
+    console.log('Raw Psychologists:', psychologists.map(p => ({
+      _id: p._id,
+      personalInfoImage: p.personalInfo?.profileImage,
+      userEmail: p.user?.email
+    })));
 
-  res.json(formattedPsychologists);
+    const formattedPsychologists = psychologists.map(psych => {
+      try {
+        // Ensure user exists
+        if (!psych.user) {
+          console.error('Psychologist without user:', psych._id);
+          return null;
+        }
+
+        // Safe access to profileImage
+        const profileImagePath = psych.personalInfo?.profileImage 
+          ? psych.personalInfo.profileImage.replace(/\\/g, '/')
+          : null;
+
+        return {
+          _id: psych._id,
+          personalInfo: {
+            ...psych.personalInfo,
+            profileImage: profileImagePath
+          },
+          professionalInfo: psych.professionalInfo,
+          contactInfo: {
+            ...psych.contactInfo,
+            email: psych.user.email
+          },
+          status: psych.user.status,
+          availabilitySchedule: psych.availabilitySchedule
+        };
+      } catch (formatError) {
+        console.error('Error formatting psychologist:', formatError);
+        return null;
+      }
+    }).filter(p => p !== null); // Remove any null entries
+
+    res.json(formattedPsychologists);
+  } catch (error) {
+    console.error('Full getPsychologists Error:', error);
+    res.status(500).json({
+      message: 'Error retrieving psychologists',
+      error: error.message,
+      stack: error.stack
+    });
+  }
 });
 
 // Update User Status

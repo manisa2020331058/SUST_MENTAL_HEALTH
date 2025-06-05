@@ -22,6 +22,7 @@ router.put('/availability', protect, psychologistOnly, updateAvailability);
 router.get('/students', protect, psychologistOnly, getPsychologistStudents);
 router.post('/students/enroll', protect, psychologistOnly, enrollStudent);
 
+
 // Session Routes
 router.get('/sessions/upcoming', protect, psychologistOnly, getUpcomingSessions);
 router.get('/sessions/past', protect, psychologistOnly, getPastSessions);

@@ -14,10 +14,13 @@ const {
   getUpcomingSessions,
   getPastSessions,
   updateSessionStatus,
-  getSingleSession,
   cancelSession,
   rescheduleSession,
-  addSessionNotes
+  addSessionNotes,
+  getAvailableTimeSlots,
+  getPsychologistCalendar,
+
+
 } = require('../controllers/sessionController');
 
 // Psychologist Routes
@@ -28,7 +31,6 @@ router.get('/psychologist/all', protect, psychologistOnly, getPsychologistSessio
 router.get('/student/:studentId', protect, psychologistOnly, getStudentSessions);
 
 // Session Management Routes
-router.get('/:sessionId', protect, getSingleSession);
 router.patch('/:sessionId/status', protect, psychologistOnly, updateSessionStatus);
 router.patch('/:sessionId/notes', protect, psychologistOnly, addSessionNotes);
 router.post('/:sessionId/cancel', protect, cancelSession);
@@ -38,6 +40,21 @@ router.post('/:sessionId/reschedule', protect, psychologistOnly, rescheduleSessi
 router.post('/schedule', protect, studentOnly, scheduleSession);
 router.get('/student/upcoming', protect, studentOnly, getUpcomingSessions);
 router.get('/student/past', protect, studentOnly, getPastSessions);
+// Add these routes to sessionRoutes.js
 
+// Get available time slots
+router.get('/available-slots', protect, getAvailableTimeSlots);
+
+// Get psychologist calendar
+router.get('/psychologist/calendar', protect, psychologistOnly, getPsychologistCalendar);
+
+// New route for bulk updates to availability
+//router.put('/psychologist/availability', protect, psychologistOnly, updateAvailability);
+
+// New route for adding availability exceptions
+//router.post('/psychologist/availability-exceptions', protect, psychologistOnly, addAvailabilityException);
+
+// Delete availability exception
+//router.delete('/psychologist/availability-exceptions/:exceptionId', protect, psychologistOnly, deleteAvailabilityException);
 
 module.exports = router;

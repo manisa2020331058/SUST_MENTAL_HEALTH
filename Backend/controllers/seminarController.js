@@ -39,3 +39,17 @@ exports.updateSeminarStatus = asyncHandler(async (req, res) => {
   res.json(seminar);
 });
 
+// Delete Seminar
+exports.deleteSeminar = asyncHandler(async (req, res) => {
+  const seminar = await Seminar.findById(req.params.id);
+
+  if (!seminar) {
+    res.status(404);
+    throw new Error('Seminar not found');
+  }
+
+  
+
+  await seminar.deleteOne(); // Deletes the seminar
+  res.json({ message: 'Seminar deleted successfully' });
+});

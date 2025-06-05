@@ -35,7 +35,7 @@ router.get('/users', protect, adminOnly, hasPermission('user_management'), getAl
 router.put('/user-status', protect, adminOnly, hasPermission('user_management'), updateUserStatus);
 
 // Psychologist Management Routes
-router.get('/psychologists', protect, adminOnly, hasPermission('psychologist_management'), getPsychologists);
+router.get('/psychologists', getPsychologists);
 router.post('/psychologists', protect, adminOnly, hasPermission('psychologist_management'), enrollPsychologist);
 router.put(
   '/psychologists/:psychologistId',

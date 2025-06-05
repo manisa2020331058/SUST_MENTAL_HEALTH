@@ -31,17 +31,9 @@ const PsychologistSchema = new mongoose.Schema({
     profileImage: { 
       type: String, 
       default: '../images/default-avatar.png', // Default image path
-      validate: {
-        validator: function(v) {
-          // Optional: Add URL validation if needed
-          return v === null || 
-                 v === '' || 
-                 /^(https?:\/\/.*\.(png|jpg|jpeg|gif|webp))/i.test(v);
-        },
-        message: 'Invalid image URL'
-      }
-    }
+     
   },
+},
   professionalInfo: {
     specialization: {
       type: String,
@@ -111,27 +103,59 @@ const PsychologistSchema = new mongoose.Schema({
       trim: true
     }
   },
-  availabilitySchedule: [{
-    day: {
-      type: String,
-      enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-  
+  // Add to models/Psychologist.js
+
+// Add this to your schema
+availabilitySchedule: {
+  type: [{
+    dayOfWeek: {
+      type: Number, // 0-6 (Sunday-Saturday)
+      required: true,
+      min: 0,
+      max: 6
+    },
+    isAvailable: {
+      type: Boolean,
+      default: true
     },
     slots: [{
       startTime: {
-        type: String,
+        type: String, // Format: "09:00"
         required: true
       },
       endTime: {
-        type: String,
+        type: String, // Format: "17:00"
         required: true
-      },
-      isAvailable: {
-        type: Boolean,
-        default: true
       }
     }]
   }],
+  default: [
+    // Default 9am-5pm Sunday-Thursday
+    { dayOfWeek: 0, isAvailable: true, slots: [{ startTime: "09:00", endTime: "17:00" }] }, // Sunday
+    { dayOfWeek: 1, isAvailable: true, slots: [{ startTime: "09:00", endTime: "17:00" }] }, // Monday
+    { dayOfWeek: 2, isAvailable: true, slots: [{ startTime: "09:00", endTime: "17:00" }] }, // Tuesday
+    { dayOfWeek: 3, isAvailable: true, slots: [{ startTime: "09:00", endTime: "17:00" }] }, // Wednesday
+    { dayOfWeek: 4, isAvailable: true, slots: [{ startTime: "09:00", endTime: "17:00" }] }, // Thursday
+    { dayOfWeek: 5, isAvailable: false, slots: [] }, // Friday
+    { dayOfWeek: 6, isAvailable: false, slots: [] }  // Saturday
+  ]
+},
+
+// Exception dates (holidays, special schedules)
+availabilityExceptions: [{
+  date: {
+    type: Date,
+    required: true
+  },
+  isAvailable: {
+    type: Boolean,
+    default: false
+  },
+  slots: [{
+    startTime: String,
+    endTime: String
+  }]
+}],
   statistics: {
     totalSessions: {
       type: Number,
@@ -198,17 +222,6 @@ PsychologistSchema.pre('save', function(next) {
   next();
 });
 
-// Method to check availability for a specific time slot
-PsychologistSchema.methods.isAvailable = function(date, startTime) {
-  const dayOfWeek = new Date(date).toLocaleString('en-us', { weekday: 'long' });
-  const daySchedule = this.availabilitySchedule.find(schedule => schedule.day === dayOfWeek);
-  
-  if (!daySchedule) return false;
-  
-  return daySchedule.slots.some(slot => {
-    return slot.startTime === startTime && slot.isAvailable;
-  });
-};
 
 // Method to update session statistics
 PsychologistSchema.methods.updateStatistics = async function() {
@@ -241,4 +254,134 @@ PsychologistSchema.methods.updateStatistics = async function() {
   await this.save();
 };
 
+
+
+// Check if psychologist is available at specific date and time
+PsychologistSchema.methods.isAvailable = async function(date, time, duration = 60) {
+  const requestDate = new Date(date);
+  const dayOfWeek = requestDate.getDay();
+  const requestTimeStr = time;
+  
+  // Format date to YYYY-MM-DD for exception checking
+  const dateString = requestDate.toISOString().split('T')[0];
+  
+  // Check if date is an exception
+  const exceptionDate = this.availabilityExceptions.find(
+    exception => exception.date.toISOString().split('T')[0] === dateString
+  );
+  
+  if (exceptionDate) {
+    if (!exceptionDate.isAvailable) return false;
+    
+    // Check if time is within exception slots
+    return exceptionDate.slots.some(slot => 
+      requestTimeStr >= slot.startTime && 
+      requestTimeStr <= slot.endTime
+    );
+  }
+  
+  // Check regular schedule
+  const daySchedule = this.availabilitySchedule.find(s => s.dayOfWeek === dayOfWeek);
+  if (!daySchedule || !daySchedule.isAvailable) return false;
+  
+  // Check if time falls within any available slot
+  const isInSlot = daySchedule.slots.some(slot => 
+    requestTimeStr >= slot.startTime && 
+    requestTimeStr <= slot.endTime
+  );
+  
+  if (!isInSlot) return false;
+  
+  // Now check if there's an existing session at this time
+  const Session = mongoose.model('Session');
+  
+  const hasOverlap = await Session.checkOverlap(
+    this._id, 
+    date, 
+    time, 
+    duration
+  );
+  
+  return !hasOverlap;
+};
+
+// Get available slots for a specific date
+PsychologistSchema.methods.getAvailableTimeSlots = async function(date, slotDuration = 60) {
+  const requestDate = new Date(date);
+  const dayOfWeek = requestDate.getDay();
+  const dateString = requestDate.toISOString().split('T')[0];
+  const Session = mongoose.model('Session');
+  
+  // Get all sessions for this date
+  const existingSessions = await Session.find({
+    psychologist: this._id,
+    date: {
+      $gte: new Date(dateString),
+      $lt: new Date(new Date(dateString).setDate(new Date(dateString).getDate() + 1))
+    },
+    status: { $ne: 'cancelled' }
+  });
+  
+  // Check if date is an exception
+  const exceptionDate = this.availabilityExceptions.find(
+    exception => exception.date.toISOString().split('T')[0] === dateString
+  );
+  
+  if (exceptionDate) {
+    if (!exceptionDate.isAvailable) return [];
+    return this._generateTimeSlots(exceptionDate.slots, existingSessions, slotDuration, requestDate);
+  }
+  
+  // Use regular schedule
+  const daySchedule = this.availabilitySchedule.find(s => s.dayOfWeek === dayOfWeek);
+  if (!daySchedule || !daySchedule.isAvailable) return [];
+  
+  return this._generateTimeSlots(daySchedule.slots, existingSessions, slotDuration, requestDate);
+};
+
+// Helper method to generate time slots
+PsychologistSchema.methods._generateTimeSlots = function(slots, existingSessions, slotDuration, date) {
+  const availableSlots = [];
+  
+  for (const slot of slots) {
+    let [startHour, startMin] = slot.startTime.split(':').map(Number);
+    const [endHour, endMin] = slot.endTime.split(':').map(Number);
+    
+    // Generate slots in increments of slotDuration minutes
+    while ((startHour < endHour) || (startHour === endHour && startMin < endMin)) {
+      const slotTime = `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`;
+      const slotDate = new Date(date);
+      slotDate.setHours(startHour, startMin, 0, 0);
+      
+      // Check if this slot conflicts with any existing session
+      const isBooked = existingSessions.some(session => {
+        const sessionDate = new Date(session.date);
+        const [sessionHour, sessionMin] = session.time.split(':').map(Number);
+        sessionDate.setHours(sessionHour, sessionMin, 0, 0);
+        
+        const sessionEndTime = new Date(sessionDate.getTime() + session.duration * 60000);
+        const slotEndTime = new Date(slotDate.getTime() + slotDuration * 60000);
+        
+        return (slotDate < sessionEndTime && slotEndTime > sessionDate);
+      });
+      
+      if (!isBooked) {
+        availableSlots.push({
+          time: slotTime,
+          duration: slotDuration,
+          available: true
+        });
+      }
+      
+      // Move to next time slot
+      startMin += slotDuration;
+      if (startMin >= 60) {
+        startHour += Math.floor(startMin / 60);
+        startMin %= 60;
+      }
+    }
+  }
+  
+  return availableSlots;
+};
 module.exports = mongoose.model('Psychologist', PsychologistSchema);
