@@ -1,5 +1,5 @@
 // src/pages/Resources.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FaBook, 
   FaVideo, 
@@ -10,86 +10,50 @@ import {
   FaHeartbeat,
   FaBrain,
   FaYinYang,
-  FaHandHoldingHeart
+  FaHandHoldingHeart,
+  FaExternalLinkAlt
 } from 'react-icons/fa';
 import '../styles/Resources.css';
 
 const Resources = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [resources, setResources] = useState([]);
+  const [podcasts, setPodcasts] = useState([]);
 
-  const resourceCategories = [
-    { 
-      name: 'Mental Health', 
-      icon: <FaBrain />,
-      resources: [
-        {
-          title: 'Understanding Anxiety',
-          type: 'Article',
-          description: 'Comprehensive guide to understanding and managing anxiety disorders.',
-          link: '#',
-          icon: <FaBook />
-        },
-        {
-          title: 'Depression Awareness',
-          type: 'PDF',
-          description: 'In-depth research on depression symptoms and treatment.',
-          link: '#',
-          icon: <FaFilePdf />
-        }
-      ]
-    },
-    { 
-      name: 'Wellness', 
-      icon: <FaHeartbeat />,
-      resources: [
-        {
-          title: 'Mindfulness Techniques',
-          type: 'Video',
-          description: 'Learn practical mindfulness exercises for stress reduction.',
-          link: '#',
-          icon: <FaVideo />
-        },
-        {
-          title: 'Meditation Guide',
-          type: 'Podcast',
-          description: 'Expert-led meditation techniques for mental clarity.',
-          link: '#',
-          icon: <FaYinYang />
-        }
-      ]
-    },
-    { 
-      name: 'Self-Care', 
-      icon: <FaHandHoldingHeart />,
-      resources: [
-        {
-          title: 'Self-Care Strategies',
-          type: 'Article',
-          description: 'Practical self-care techniques for mental and emotional well-being.',
-          link: '#',
-          icon: <FaBook />
-        }
-      ]
-    }
-  ];
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/ai/getArticles'); 
+        const data = await response.json();
+        setResources(data);
+      } catch (error) {
+        console.error('Failed to fetch resources:', error);
+      }
+    };
 
-  const filteredResources = resourceCategories
-    .flatMap(category => 
-      category.resources.filter(resource => 
-        resource.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (selectedCategories.length === 0 || 
-         selectedCategories.includes(category.name))
-      )
-    );
+    fetchResources();
+  }, []);
 
-  const toggleCategory = (category) => {
-    setSelectedCategories(prev => 
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
-  };
+  useEffect(() => {
+    const fetchPodcasts = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/ai/podcasts');
+        const data = await response.json();
+        setPodcasts(data);
+      } catch (error) {
+        console.error('Failed to fetch podcasts:', error);
+      }
+    };
+
+    fetchPodcasts();
+  }, []);
+  
+  const filteredResources = resources.filter(resource =>
+    resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    resource.summary.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+
 
   return (
     <div className="resources-page">
@@ -101,30 +65,13 @@ const Resources = () => {
       <div className="resources-search-container">
         <div className="search-input-wrapper">
           <FaSearch className="search-icon" />
-          <input 
+          <input
             type="text"
             placeholder="Search resources..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
-        </div>
-        <div className="category-filter">
-          <FaFilter className="filter-icon" />
-          <div className="category-buttons">
-            {resourceCategories.map(category => (
-              <button
-                key={category.name}
-                onClick={() => toggleCategory(category.name)}
-                className={`category-btn ${
-                  selectedCategories.includes(category.name) ? 'active' : ''
-                }`}
-              >
-                {category.icon}
-                {category.name}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -133,15 +80,23 @@ const Resources = () => {
           filteredResources.map((resource, index) => (
             <div key={index} className="resource-card">
               <div className="resource-card-header">
-                <div className="resource-icon">{resource.icon}</div>
-                <span className="resource-type">{resource.type}</span>
+                <div className="resource-icon"><FaBook /></div>
+                <span className="resource-type">Article</span>
               </div>
               <div className="resource-content">
                 <h3>{resource.title}</h3>
-                <p>{resource.description}</p>
-                <a href={resource.link} className="resource-link">
-                  Access Resource
+                <p>{resource.summary}</p>
+                <a
+                  href={resource.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="resource-button-link"
+                >
+                  <button className="resource-button">
+                    Start Reading <FaExternalLinkAlt className="external-icon" />
+                  </button>
                 </a>
+
               </div>
             </div>
           ))
@@ -152,21 +107,30 @@ const Resources = () => {
         )}
       </div>
 
+      {/* Podcast Section */}
       <section className="featured-resources">
-        <h2>Featured Resources</h2>
+        <h2>Podcast Episodes</h2>
         <div className="featured-grid">
-          <div className="featured-card">
-            <FaPodcast className="featured-icon" />
-            <h3>Mental Health Podcast Series</h3>
-            <p>Expert discussions on mental wellness</p>
-            <button>Listen Now</button>
-          </div>
-          <div className="featured-card">
-            <FaVideo className="featured-icon" />
-            <h3>Wellness Webinars</h3>
-            <p>Live sessions with mental health professionals</p>
-            <button>Explore Webinars</button>
-          </div>
+          {podcasts.length > 0 ? (
+            podcasts.map((podcast, index) => (
+              <div key={index} className="featured-card">
+                <FaPodcast className="featured-icon" />
+                <h3>{podcast.title}</h3>
+                <p>{podcast.summary.split('\n')[0]}</p> {/* first paragraph */}
+                {podcast.link ? (
+                  <a
+                    href={podcast.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <button>Listen Now</button>
+                  </a>
+                ) : null}
+              </div>
+            ))
+          ) : (
+            <p>No podcast episodes available</p>
+          )}
         </div>
       </section>
     </div>

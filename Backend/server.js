@@ -9,6 +9,9 @@ const path = require('path');
 const socketio = require('socket.io');
 const http = require('http');
 const Message = require('./models/Message'); // Add this line
+const Parser = require('rss-parser');
+const aiRoutes = require('./routes/aiRoutes');
+
 
 // Load environment variables
 dotenv.config();
@@ -111,12 +114,14 @@ app.get('/', (req, res) => {
       '/api/psychologists',
       '/api/sessions',
       '/api/seminars',
-      'api/users'
+      'api/users',
+      '/api/ai'
     ]
   });
 });
 
 // Routes
+app.use('/api/ai', require('./routes/aiRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/students', require('./routes/studentRoutes'));

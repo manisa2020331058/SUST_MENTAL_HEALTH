@@ -196,3 +196,81 @@
       grid-template-columns: 1fr;
     }
   }
+    /* Add or modify in src/styles/Resources.css */
+  
+    .resource-card,
+    .featured-card {
+      width: 300px;
+      height: 300px;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+  
+    .resource-content p,
+    .featured-card p {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #555;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      /* Show only 4 lines */
+      -webkit-box-orient: vertical;
+    }
+  
+    .resource-content h3,
+    .featured-card h3 {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+.resources-grid,
+.featured-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.resource-button-link {
+  text-decoration: none;
+}
+
+.resource-button-link {
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 10px;
+}
+
+.resource-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #007bff;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.resource-button:hover {
+  background-color: #0056b3;
+}
+
+.external-icon {
+  font-size: 14px;
+}
+
