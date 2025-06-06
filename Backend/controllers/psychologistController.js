@@ -4,7 +4,8 @@ const Psychologist = require('../models/Psychologist');
 const Student = require('../models/Student');
 const Session = require('../models/Session');
 const User = require('../models/User');
-const{studentProfilePicUpload}=require('../middleware/multerMiddleware');
+const { studentProfilePicUpload } = require('../middleware/multerMiddleware');
+const StudentAiChat = require('../models/StudentAiChat');
 
 // Get Psychologist Profile
 exports.getPsychologistProfile = asyncHandler(async (req, res) => {
@@ -330,6 +331,11 @@ exports.enrollStudent = asyncHandler(async (req, res) => {
     creatorModel: 'Psychologist',
     profileImage:profilePicPath
   });
+  const studentAiChat = new StudentAiChat({
+    userId: user._id,
+    summary: 'This is a summary of the student',
+    chatHistory: []
+  });
   await user.save();
   if (!user) {
     throw new Error("User not found, cannot create student");
@@ -346,6 +352,8 @@ exports.enrollStudent = asyncHandler(async (req, res) => {
     createdBy: req.user._id
   });
   await student.save();
+
+  await studentAiChat.save();
 
   res.status(201).json({
     message: 'Student enrolled successfully',

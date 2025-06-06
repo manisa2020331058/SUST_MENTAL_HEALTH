@@ -97,6 +97,8 @@ const StudentDashboard = () => {
   // UI State
   const [activeSection, setActiveSection] = useState("dashboard")
 
+  const[userId,setUserId]=useState(null)
+
   // Existing dashboard state
   const [dashboardData, setDashboardData] = useState({
     studentProfile: {
@@ -135,6 +137,38 @@ const StudentDashboard = () => {
 
   // Chat with MINDMATE state
   const [isMindmateOpen, setIsMindmateOpen] = useState(false)
+
+  const [aiInputMessage, setAiInputMessage] = useState('');
+  const [aiChatHistory, setAiChatHistory] = useState([]);
+
+  const sendAiMessage = async () => {
+    if (!aiInputMessage.trim()) return;
+
+    const userText = aiInputMessage;
+    setAiChatHistory([...aiChatHistory, { role: 'user', text: userText }]);
+    setAiInputMessage('');
+
+    try {
+      const response = await fetch('http://localhost:5000/api/ai/aiChat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, message: userText })
+      });
+
+      const data = await response.json();
+
+      if (data.reply) {
+        setAiChatHistory(prev => [...prev, { role: 'bot', text: data.reply }]);
+      } else {
+        setAiChatHistory(prev => [...prev, { role: 'bot', text: 'Sorry, something went wrong.' }]);
+      }
+
+    } catch (err) {
+      console.error(err);
+      setAiChatHistory(prev => [...prev, { role: 'bot', text: 'Error connecting to MindMate.' }]);
+    }
+  };
+
 
   // Add useEffect to fetch articles and podcasts
   useEffect(() => {
@@ -228,12 +262,15 @@ const StudentDashboard = () => {
         setIsLoading(true)
         const dashboardResponse = await api.get("/students/dashboard-info")
 
+        console.log(dashboardResponse.data.studentProfile.userId)
+        
+        setUserId(dashboardResponse.data.studentProfile.userId)
+
         if (dashboardResponse.data.studentProfile.personalInfo.profileImage) {
           const profileImage = dashboardResponse.data.studentProfile.personalInfo.profileImage
           dashboardResponse.data.studentProfile.personalInfo.profileImage = `http://localhost:5000/${profileImage.replace(/^\/+/, "")}`
         }
-
-        setDashboardData(dashboardResponse.data)
+        setDashboardData(dashboardResponse.data)  
         setIsLoading(false)
       } catch (error) {
         console.error("Dashboard Fetch Error:", error)
@@ -698,15 +735,41 @@ const StudentDashboard = () => {
                 <FaTimes />
               </button>
             </div>
+
             <div className="mindmate-chat-area">
-              <div className="mindmate-welcome">
-                <p>Hello! I'm MINDMATE, your AI mental health companion. How can I help you today?</p>
+
+              {/* Chat Messages */}
+              <div className="chat-messages">
+                {aiChatHistory.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`chat-bubble ${msg.role === 'user' ? 'user-msg' : 'bot-msg'}`}
+                  >
+                    <p>{msg.text}</p>
+                  </div>
+                ))}
               </div>
-              {/* Chat implementation will be added later */}
+
+              {/* Input Area */}
+              <div className="chat-input-area">
+                <input
+                  type="text"
+                  placeholder="Type your message..."
+                  value={aiInputMessage}
+                  onChange={(e) => setAiInputMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') sendAiMessage();
+                  }}
+                />
+                <button onClick={sendAiMessage}>
+                  <FaPaperPlane />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+
     </div>
   )
 
