@@ -146,6 +146,15 @@ const StudentDashboard = () => {
   const [quote, setQuote] = useState('');
   const [quoteLoading, setQuoteLoading] = useState(true);
 
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollTop = chatEndRef.current.scrollHeight;
+    }
+  }, [aiChatHistory]);
+
+
   const sendAiMessage = async () => {
     if (!aiInputMessage.trim()) return;
 
@@ -785,7 +794,7 @@ const StudentDashboard = () => {
             <div className="mindmate-chat-area">
 
               {/* Chat Messages */}
-              <div className="chat-messages">
+              <div className="chat-messages" ref={chatEndRef}>
                 {aiChatHistory.map((msg, idx) => (
                   <div
                     key={idx}
@@ -793,8 +802,10 @@ const StudentDashboard = () => {
                   >
                     <p>{msg.text}</p>
                   </div>
+                  
                 ))}
               </div>
+
 
               {/* Input Area */}
               <div className="chat-input-area">
@@ -814,7 +825,7 @@ const StudentDashboard = () => {
             </div>
           </div>
         </div>
-      )}
+      )}  
 
     </div>
   )

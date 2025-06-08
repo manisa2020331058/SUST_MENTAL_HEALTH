@@ -105,25 +105,24 @@ router.post('/update-summary/:userId', async (req, res) => {
         const previousSummary = studentAiHistory.summary || "No previous summary.";
 
         const prompt = `
-            You are a mental health summarizer. Your job is to generate a concise and evolving psychological summary of a user based on their past summary and their most recent message.
+            You are a mental health assistant. Your task is to update a user's psychological summary based on their latest message and their previous summary.
 
-            Instructions:
-            - The updated summary should reflect the user's emotional state, personality traits, mental health concerns, and communication tone.
-            - You must **prioritize the latest message** over older ones. If it contradicts older information, favor the latest one.
-            - Keep useful previous information if it’s still relevant.
-            - Avoid repeating outdated or contradicted statements.
-            - Do **not** include explanations, formatting, or introductory phrases like "Updated Summary:" — only output the **final summary** sentence(s).
-            - Write in simple, natural English, as if you're describing the person to a counselor.
-            - Do **not** assume details not present in the inputs.
+            Always return a short, clear, and human-like paragraph describing the user. The summary should reflect their emotions, thoughts, personality traits, and mental state based on the most recent message.
+
+            Avoid repeating old points unless they still apply. Do not add extra explanation or labels like "Updated Summary:". Just return the improved summary in plain English.
+
+            Example format:
+            "The user name is Tarek, he is feeling like he is wasting his time. He feels stressed about his future. Gets distracted easily."
+
+            Now use the following data to generate an improved summary.
 
             Previous Summary:
             "${previousSummary}"
 
-            Latest User Message:
+            Latest Message from User:
             "${latestMessage}"
-
-            Now generate an improved, realistic summary of the user based on the above:
             `.trim();
+
 
 
 
