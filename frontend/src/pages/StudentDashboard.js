@@ -15,6 +15,7 @@ import {
   FaNewspaper,
   FaExternalLinkAlt,
   FaSearch,
+  FaQuoteLeft
 } from "react-icons/fa"
 import api from "../utils/api"
 import "../styles/studentDashboard.css"
@@ -141,6 +142,10 @@ const StudentDashboard = () => {
   const [aiInputMessage, setAiInputMessage] = useState('');
   const [aiChatHistory, setAiChatHistory] = useState([]);
 
+
+  const [quote, setQuote] = useState('');
+  const [quoteLoading, setQuoteLoading] = useState(true);
+
   const sendAiMessage = async () => {
     if (!aiInputMessage.trim()) return;
 
@@ -162,6 +167,14 @@ const StudentDashboard = () => {
       } else {
         setAiChatHistory(prev => [...prev, { role: 'bot', text: 'Sorry, something went wrong.' }]);
       }
+
+      // Here call the update-summery api
+      await fetch(`http://localhost:5000/api/ai/update-summary/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ latestMessage: userText })
+      });
+
 
     } catch (err) {
       console.error(err);
@@ -284,6 +297,25 @@ const StudentDashboard = () => {
 
     fetchDashboardData()
   }, [])
+
+
+  useEffect(() => {
+    const fetchQuote = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/ai/getQuote/${userId}`);
+        const data = await res.json();
+        setQuote(data.quote);
+      } catch (err) {
+        console.error('Error fetching quote:', err);
+        setQuote("Stay strong. You're doing better than you think.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuote();
+  }, [userId]);
+
 
   // Fetch psychologists and seminars for resources section
   useEffect(() => {
@@ -472,6 +504,18 @@ const StudentDashboard = () => {
           <FaRobot />
           <span>Chat with MINDMATE</span>
         </button>
+        <div className="dashboard">
+          {/* Other dashboard sections */}
+
+          <div className="inspiration-quote-section">
+            <h3><FaQuoteLeft /> Daily Motivation</h3>
+            {loading ? (
+              <p>Loading quote...</p>
+            ) : (
+              <blockquote className="motivational-quote">{quote}</blockquote>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Profile Section */}
@@ -735,6 +779,8 @@ const StudentDashboard = () => {
                 <FaTimes />
               </button>
             </div>
+
+            
 
             <div className="mindmate-chat-area">
 
