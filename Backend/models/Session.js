@@ -42,7 +42,8 @@ const SessionSchema = new mongoose.Schema({
   },
   notes: {
     type: String,
-    trim: true
+    trim: true,
+    default: ''
   },
   cancellationReason: {
     type: String,

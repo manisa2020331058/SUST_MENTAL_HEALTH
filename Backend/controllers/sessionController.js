@@ -21,9 +21,10 @@ exports.getUpcomingSessions = asyncHandler(async (req, res) => {
     date: { $gte: new Date() }
   }).populate({
     path: 'student',
-    select: 'personalInfo contactInfo user',
+    select: 'personalInfo academicInfo contactInfo user',
     populate: { path: 'user', select: 'email status' }
   }).sort({ date: 1, time: 1 });
+
 
   res.json(sessions);
 });
@@ -44,7 +45,7 @@ exports.getPastSessions = asyncHandler(async (req, res) => {
     ]
   }).populate({
     path: 'student',
-    select: 'personalInfo contactInfo user',
+    select: 'personalInfo academicInfo contactInfo user',
     populate: { path: 'user', select: 'email status' }
   }).sort({ date: -1, time: -1 });
 
@@ -135,8 +136,9 @@ exports.updateSessionStatus = asyncHandler(async (req, res) => {
 
 // Add session notes
 exports.addSessionNotes = asyncHandler(async (req, res) => {
-  const { notes } = req.body;
+  const notes  = req.body.notes;
   const session = await Session.findById(req.params.sessionId);
+
 
   if (!session) {
     res.status(404);

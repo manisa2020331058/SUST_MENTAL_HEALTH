@@ -272,7 +272,8 @@ const handleAddSessionNotes = async (e) => {
   
   try {
     setLoading(true);
-    await api.sessions.addNotes(selectedSession._id, { notes: sessionNotes });
+
+    await api.sessions.addNotes(selectedSession._id,  sessionNotes );
     
     // Refresh sessions
     const [upcomingRes, pastRes] = await Promise.all([
@@ -334,7 +335,8 @@ const handleCancelSession = async (sessionId) => {
   
   try {
     setLoading(true);
-    await api.sessions.cancel(sessionId, { reason: 'Cancelled by psychologist' });
+
+    await api.sessions.cancel(sessionId, 'Cancelled by psychologist' );
     
     // Refresh sessions
     const [upcomingRes, pastRes] = await Promise.all([
@@ -635,7 +637,7 @@ useEffect(() => {
   const handleUpdateSession = async (sessionId, status) => {
     try {
       setLoading(true);
-      await api.sessions.updateStatus(sessionId, { status });
+      await api.sessions.updateStatus(sessionId,  status );
       fetchSessions();
       setError(null);
     } catch (err) {
@@ -1127,27 +1129,27 @@ const handleSendMessage = async () => {
             </div>
 
             {newSession.date && (
-  <div className="form-group">
-    <label>Available Time Slots</label>
-    {loading ? (
-      <p>Loading available time slots...</p>
-    ) : availableTimeSlots.length > 0 ? (
-      <div className="time-slots-container">
-        {availableTimeSlots.map((slot, index) => (
-          <div 
-            key={index}
-            className={`time-slot ${newSession.time === slot.time ? 'selected' : ''}`}
-            onClick={() => setNewSession({...newSession, time: slot.time})}
-          >
-            {slot.time}
-          </div>
-        ))}
-      </div>
-    ) : (
-      <p className="no-slots-message">No available time slots for this date</p>
-    )}
-  </div>
-)}
+            <div className="form-group">
+              <label>Available Time Slots</label>
+              {loading ? (
+                <p>Loading available time slots...</p>
+              ) : availableTimeSlots.length > 0 ? (
+                <div className="time-slots-container">
+                  {availableTimeSlots.map((slot, index) => (
+                    <div 
+                      key={index}
+                      className={`time-slot ${newSession.time === slot.time ? 'selected' : ''}`}
+                      onClick={() => setNewSession({...newSession, time: slot.time})}
+                    >
+                      {slot.time}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="no-slots-message">No available time slots for this date</p>
+              )}
+            </div>
+          )}
 
             <div className="form-group">
               <label>Duration (minutes)</label>
@@ -1210,7 +1212,7 @@ const handleSendMessage = async () => {
               <textarea
                 value={sessionNotes}
                 onChange={(e) => setSessionNotes(e.target.value)}
-                rows="5"
+                rows="10"
                 placeholder="Enter session notes..."
                 required
               ></textarea>
