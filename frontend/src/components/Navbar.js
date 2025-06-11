@@ -17,7 +17,13 @@ const Navbar = () => {
         </div>
         <ul className="navbar-menu">
           <li><Link to="/resources">Resources</Link></li>
-          <li><Link to="/contact">Contact</Link></li>
+          <li><a
+            href="mailto:tarekahmad484@gmail.com"
+            className="text-blue-600 hover:underline text-sm"
+          >
+            Contact us
+          </a>
+          </li>
           <li><Link to="/login" className="login-but">Login</Link></li>
         </ul>
       </div>

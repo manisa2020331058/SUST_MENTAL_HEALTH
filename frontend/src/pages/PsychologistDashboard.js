@@ -25,6 +25,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import { useChat } from '../contexts/ChatContext';
 import { useNavigate } from 'react-router-dom';
+import PsychologistOverview from './PsychologistOverview';
 
 const defaultProfile = {
   personalInfo: {
@@ -94,6 +95,7 @@ const [showNewSessionForm, setShowNewSessionForm] = useState(false);
    const [editedProfile, setEditedProfile] = useState(defaultProfile);
    const [isEditing, setIsEditing] = useState(false);
 
+  
      // Add this useEffect for socket connection
 useEffect(() => {
   if (socket) {
@@ -523,6 +525,8 @@ useEffect(() => {
   
       setProfile(sanitizedProfile);
       setError(null);
+
+
     } catch (err) {
       console.error('Profile fetch error:', err);
       setError('Error fetching profile: ' + (err.response?.data?.message || err.message));
@@ -795,25 +799,7 @@ const handleSendMessage = async () => {
   }
 };
 
-  const renderOverview = () => (
-    <div className="overview-section">
-      <h2>Dashboard Overview</h2>
-      <div className="overview-cards">
-        <div className="overview-card">
-          <h3>Total Students</h3>
-          <p>{students?.length || 0}</p>
-        </div>
-        <div className="overview-card">
-          <h3>Upcoming Sessions</h3>
-          <p>{upcomingSessions?.length || 0}</p>
-        </div>
-        <div className="overview-card">
-          <h3>Seminars</h3>
-          <p>{seminars?.length || 0}</p>
-        </div>
-      </div>
-    </div>
-  );
+  const renderOverview = PsychologistOverview;
 
   const renderStudentEnrollment = () => (
     <div className="student-enrollment-section">
@@ -1779,7 +1765,7 @@ const handleSendMessage = async () => {
         
         {!loading && (
           <>
-            {activeSection === 'overview' && renderOverview()}
+            {activeSection === 'overview' && (<PsychologistOverview profile={profile} />)}
             {activeSection === 'profile' && (
               <PsychologistProfile
                 profile={profile}

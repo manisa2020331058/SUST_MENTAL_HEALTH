@@ -11,6 +11,11 @@ const {
 } = require('../controllers/psychologistController');
 const { protect, psychologistOnly } = require('../middleware/authMiddleware');
 
+const Psychologist = require('../models/Psychologist'); // Import Psychologist model
+const User = require('../models/User'); // Import User model
+const Student = require('../models/Student'); // Import Student model
+const Session = require('../models/Session'); // Import Session model
+
 const router = express.Router();
 
 // Profile Routes
@@ -26,5 +31,78 @@ router.post('/students/enroll', protect, psychologistOnly, enrollStudent);
 // Session Routes
 router.get('/sessions/upcoming', protect, psychologistOnly, getUpcomingSessions);
 router.get('/sessions/past', protect, psychologistOnly, getPastSessions);
+
+
+// add email route
+router.get('/email/:email', protect, psychologistOnly, async (req, res) => {
+  const email = req.params.email;
+  try {
+    const psychologist = await Psychologist.findOne({ 'contactInfo.email': email });
+    if (!psychologist) {
+      return res.status(404).json({ message: 'Psychologist not found' });
+    }
+
+    res.json(psychologist);
+  } catch (error) {
+    console.error('Error fetching psychologist by email:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// add students route
+router.get('/getStudents/:psychologistId', protect, psychologistOnly, async (req, res) => {
+  try {
+    const psychologistId = req.params.psychologistId;
+
+
+    if (!psychologistId) {
+      return res.status(400).json({ message: 'Psychologist ID is required' });
+    }
+
+    // Step 1: Get students created by this psychologist
+    const userStudents = await Student.find({createdBy: psychologistId });
+
+    // Step 2: Fetch detailed student info
+    const formattedStudents = await Promise.all(
+      userStudents.map(async (user, index) => {
+
+        return {
+          id: index + 1,
+          name: user?.personalInfo?.name || 'Unknown',
+          email: user?.contactInfo?.email,
+          enrollDate: user?.createdAt?.toISOString().split('T')[0] || 'N/A',
+          status: user?.academicInfo?.department || 'N/A',
+        };
+      })
+    );
+
+    res.status(200).json(formattedStudents);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error while fetching students' });
+  }
+});
+
+// add sessions route
+router.get('/getSessions/:psychologistId', protect, psychologistOnly, async (req, res) => {
+  try {
+    const psychologistId = req.params.psychologistId;
+
+    console.log('Fetching sessions for psychologist1:', psychologistId);
+
+    if (!psychologistId || psychologistId === 'null') {
+      return res.status(400).json({ message: 'Valid psychologist ID is required' });
+    }
+
+    // Fetch sessions created by this psychologist
+    
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error while fetching sessions' });
+  }
+});
+
+
 
 module.exports = router;

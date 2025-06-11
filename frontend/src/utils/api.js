@@ -79,6 +79,13 @@ const profile = {
   updateAvailability: (data) => api.put('/psychologists/availability', data)
 };
 
+// Psychologist student related API calls
+const psychologists = {
+  getByEmail: (email) => api.get(`/psychologists/email/${email}`),
+  getStudents: (psychologistId) => api.get(`/psychologists/getStudents/${psychologistId}`),
+  getSessions: (psychologistId) => api.get(`/psychologists/getSessions/${psychologistId}`),
+};
+
 // Student related API calls
 const students = {
   getAll: () => api.get('/psychologists/students'),
@@ -135,5 +142,6 @@ export default {
   profile,
   students,
   admin,
-  messages
+  messages,
+  psychologists
 };
