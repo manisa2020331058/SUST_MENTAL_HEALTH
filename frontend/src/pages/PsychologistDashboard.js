@@ -840,227 +840,227 @@ const handleSendMessage = async () => {
   );
 
 
-  const renderStudentEnrollment = () => (
-    <div className="student-enrollment-section">
-      <h2>Student Enrollment</h2>
-      <form onSubmit={handleEnrollStudent}>
-        {/* Personal Information */}
-        <div className="form-section">
-          <h3>Personal Information</h3>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Full Name</label>
-              <input 
-                type="text" 
-                value={newStudent.name}
-                onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
-                placeholder="Enter full name"
-                required 
-              />
-            </div>
-            <div className="form-group">
-              <label>Gender</label>
-              <select 
-                value={newStudent.gender}
-                onChange={(e) => setNewStudent({...newStudent, gender: e.target.value})}
-                required
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-          </div>
-          <div className="form-row">
-          <div className="profile-picture-upload">
-    <label className="profile-picture-label">Profile Picture</label>
-    <input 
-      type="file" 
-      accept="image/*"
-      onChange={(e) => setNewStudent({...newStudent, profilePicture: e.target.files[0]})}
-      className="profile-picture-input"
-      id="profilePictureUpload"
-    />
-    {newStudent.profilePicture ? (
-      <div className='profile-picture-preview'>
-        <img 
-          src={URL.createObjectURL(newStudent.profilePicture)} 
-          alt="Profile Picture Preview" 
-          className="preview-image"
-        />
-        <button 
-          type="button"
-          onClick={() => {
-            setNewStudent(prevData => ({ 
-              ...prevData, 
-              profilePicture: null 
-            }));
-          }} 
-          className="remove-image-btn"
-        >
-          Remove
-        </button>
-      </div>
-    ) : (
-      <label htmlFor="profilePictureUpload" className="upload-placeholder">
-        <div className="upload-icon">+</div>
-        Click to upload profile picture
-      </label>
-    )}
-  </div>
-         </div>
+  // const renderStudentEnrollment = () => (
+  //   <div className="student-enrollment-section">
+  //     <h2>Student Enrollment</h2>
+  //     <form onSubmit={handleEnrollStudent}>
+  //       {/* Personal Information */}
+  //       <div className="form-section">
+  //         <h3>Personal Information</h3>
+  //         <div className="form-row">
+  //           <div className="form-group">
+  //             <label>Full Name</label>
+  //             <input 
+  //               type="text" 
+  //               value={newStudent.name}
+  //               onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
+  //               placeholder="Enter full name"
+  //               required 
+  //             />
+  //           </div>
+  //           <div className="form-group">
+  //             <label>Gender</label>
+  //             <select 
+  //               value={newStudent.gender}
+  //               onChange={(e) => setNewStudent({...newStudent, gender: e.target.value})}
+  //               required
+  //             >
+  //               <option value="">Select Gender</option>
+  //               <option value="Male">Male</option>
+  //               <option value="Female">Female</option>
+  //               <option value="Other">Other</option>
+  //             </select>
+  //           </div>
+  //         </div>
+  //         <div className="form-row">
+  //         <div className="profile-picture-upload">
+  //   <label className="profile-picture-label">Profile Picture</label>
+  //   <input 
+  //     type="file" 
+  //     accept="image/*"
+  //     onChange={(e) => setNewStudent({...newStudent, profilePicture: e.target.files[0]})}
+  //     className="profile-picture-input"
+  //     id="profilePictureUpload"
+  //   />
+  //   {newStudent.profilePicture ? (
+  //     <div className='profile-picture-preview'>
+  //       <img 
+  //         src={URL.createObjectURL(newStudent.profilePicture)} 
+  //         alt="Profile Picture Preview" 
+  //         className="preview-image"
+  //       />
+  //       <button 
+  //         type="button"
+  //         onClick={() => {
+  //           setNewStudent(prevData => ({ 
+  //             ...prevData, 
+  //             profilePicture: null 
+  //           }));
+  //         }} 
+  //         className="remove-image-btn"
+  //       >
+  //         Remove
+  //       </button>
+  //     </div>
+  //   ) : (
+  //     <label htmlFor="profilePictureUpload" className="upload-placeholder">
+  //       <div className="upload-icon">+</div>
+  //       Click to upload profile picture
+  //     </label>
+  //   )}
+  // </div>
+  //        </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Date of Birth</label>
-              <input 
-                type="date" 
-                value={newStudent.dateOfBirth}
-                onChange={(e) => setNewStudent({...newStudent, dateOfBirth: e.target.value})}
-                required 
-              />
-            </div>
-            <div className="form-group">
-              <label>Age</label>
-              <input 
-                type="number" 
-                value={newStudent.age}
-                onChange={(e) => setNewStudent({...newStudent, age: e.target.value})}
-                min="17"
-                max="35"
-                required 
-              />
-            </div>
-          </div>
-        </div>
+  //         <div className="form-row">
+  //           <div className="form-group">
+  //             <label>Date of Birth</label>
+  //             <input 
+  //               type="date" 
+  //               value={newStudent.dateOfBirth}
+  //               onChange={(e) => setNewStudent({...newStudent, dateOfBirth: e.target.value})}
+  //               required 
+  //             />
+  //           </div>
+  //           <div className="form-group">
+  //             <label>Age</label>
+  //             <input 
+  //               type="number" 
+  //               value={newStudent.age}
+  //               onChange={(e) => setNewStudent({...newStudent, age: e.target.value})}
+  //               min="17"
+  //               max="35"
+  //               required 
+  //             />
+  //           </div>
+  //         </div>
+  //       </div>
 
-        {/* Contact Information */}
-        <div className="form-section">
-          <h3>Contact Information</h3>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Email Address</label>
-              <input 
-                type="email" 
-                value={newStudent.email}
-                onChange={(e) => setNewStudent({...newStudent, email: e.target.value})}
-                placeholder="Enter email address"
-                required 
-              />
-            </div>
-            <div className="form-group">
-              <label>Phone Number</label>
-              <input 
-                type="tel" 
-                value={newStudent.phoneNumber}
-                onChange={(e) => setNewStudent({...newStudent, phoneNumber: e.target.value})}
-                placeholder="Enter phone number"
-                pattern="[0-9]{11}"
-                required 
-              />
-            </div>
-            <div className="form-group">
-              <label>Address</label>
-              <input 
-                type="text" 
-                value={newStudent.address}
-                onChange={(e) => setNewStudent({...newStudent, address:e.target.value})}
-                placeholder="Enter address"
+  //       {/* Contact Information */}
+  //       <div className="form-section">
+  //         <h3>Contact Information</h3>
+  //         <div className="form-row">
+  //           <div className="form-group">
+  //             <label>Email Address</label>
+  //             <input 
+  //               type="email" 
+  //               value={newStudent.email}
+  //               onChange={(e) => setNewStudent({...newStudent, email: e.target.value})}
+  //               placeholder="Enter email address"
+  //               required 
+  //             />
+  //           </div>
+  //           <div className="form-group">
+  //             <label>Phone Number</label>
+  //             <input 
+  //               type="tel" 
+  //               value={newStudent.phoneNumber}
+  //               onChange={(e) => setNewStudent({...newStudent, phoneNumber: e.target.value})}
+  //               placeholder="Enter phone number"
+  //               pattern="[0-9]{11}"
+  //               required 
+  //             />
+  //           </div>
+  //           <div className="form-group">
+  //             <label>Address</label>
+  //             <input 
+  //               type="text" 
+  //               value={newStudent.address}
+  //               onChange={(e) => setNewStudent({...newStudent, address:e.target.value})}
+  //               placeholder="Enter address"
           
-                required 
-              />
-            </div>
-          </div>
+  //               required 
+  //             />
+  //           </div>
+  //         </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Alternative Contact Number</label>
-              <input 
-                type="tel" 
-                value={newStudent.alternatePhoneNumber}
-                onChange={(e) => setNewStudent({...newStudent, alternatePhoneNumber: e.target.value})}
-                placeholder="Enter alternative phone number"
-              />
-            </div>
-            <div className="form-group">
-              <label>Preferred Communication Method</label>
-              <select 
-                value={newStudent.communicationPreference}
-                onChange={(e) => setNewStudent({...newStudent, communicationPreference: e.target.value})}
-                required
-              >
-                <option value="">Select Preference</option>
-                <option value="Email">Email</option>
-                <option value="Phone">Phone</option>
-                <option value="Both">Both</option>
-              </select>
-            </div>
-          </div>
-        </div>
+  //         <div className="form-row">
+  //           <div className="form-group">
+  //             <label>Alternative Contact Number</label>
+  //             <input 
+  //               type="tel" 
+  //               value={newStudent.alternatePhoneNumber}
+  //               onChange={(e) => setNewStudent({...newStudent, alternatePhoneNumber: e.target.value})}
+  //               placeholder="Enter alternative phone number"
+  //             />
+  //           </div>
+  //           <div className="form-group">
+  //             <label>Preferred Communication Method</label>
+  //             <select 
+  //               value={newStudent.communicationPreference}
+  //               onChange={(e) => setNewStudent({...newStudent, communicationPreference: e.target.value})}
+  //               required
+  //             >
+  //               <option value="">Select Preference</option>
+  //               <option value="Email">Email</option>
+  //               <option value="Phone">Phone</option>
+  //               <option value="Both">Both</option>
+  //             </select>
+  //           </div>
+  //         </div>
+  //       </div>
 
-        {/* Academic Information */}
-        <div className="form-section">
-          <h3>Academic Information</h3>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Registration Number</label>
-              <input 
-                type="text" 
-                value={newStudent.registrationNumber}
-                onChange={(e) => setNewStudent({...newStudent, registrationNumber: e.target.value})}
-                placeholder="Enter registration number"
-                required 
-              />
-            </div>
-            <div className="form-group">
-              <label>Department</label>
-              <select 
-                value={newStudent.department}
-                onChange={(e) => setNewStudent({...newStudent, department: e.target.value})}
-                required
-              >
-                <option value="">Select Department</option>
-                <option value="Computer Science">Computer Science</option>
-                <option value="Engineering">Engineering</option>
-                <option value="Business Administration">Business Administration</option>
-                <option value="Social Sciences">Social Sciences</option>
-              </select>
-            </div>
-          </div>
+  //       {/* Academic Information */}
+  //       <div className="form-section">
+  //         <h3>Academic Information</h3>
+  //         <div className="form-row">
+  //           <div className="form-group">
+  //             <label>Registration Number</label>
+  //             <input 
+  //               type="text" 
+  //               value={newStudent.registrationNumber}
+  //               onChange={(e) => setNewStudent({...newStudent, registrationNumber: e.target.value})}
+  //               placeholder="Enter registration number"
+  //               required 
+  //             />
+  //           </div>
+  //           <div className="form-group">
+  //             <label>Department</label>
+  //             <select 
+  //               value={newStudent.department}
+  //               onChange={(e) => setNewStudent({...newStudent, department: e.target.value})}
+  //               required
+  //             >
+  //               <option value="">Select Department</option>
+  //               <option value="Computer Science">Computer Science</option>
+  //               <option value="Engineering">Engineering</option>
+  //               <option value="Business Administration">Business Administration</option>
+  //               <option value="Social Sciences">Social Sciences</option>
+  //             </select>
+  //           </div>
+  //         </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Academic Session</label>
-              <input 
-                type="text" 
-                value={newStudent.session}
-                onChange={(e) => setNewStudent({...newStudent, session: e.target.value})}
-                placeholder="e.g., 2019-2020"
-                required 
-              />
-            </div>
-            <div className="form-group">
-              <label>Current Year/Semester</label>
-              <select 
-                value={newStudent.currentYear}
-                onChange={(e) => setNewStudent({...newStudent, currentYear: e.target.value})}
-                required
-              >
-                <option value="">Select Current Year</option>
-                <option value="1st Year">1st Year</option>
-                <option value="2nd Year">2nd Year</option>
-                <option value="3rd Year">3rd Year</option>
-                <option value="4th Year">4th Year</option>
-              </select>
-            </div>
-          </div>
-        </div>
+  //         <div className="form-row">
+  //           <div className="form-group">
+  //             <label>Academic Session</label>
+  //             <input 
+  //               type="text" 
+  //               value={newStudent.session}
+  //               onChange={(e) => setNewStudent({...newStudent, session: e.target.value})}
+  //               placeholder="e.g., 2019-2020"
+  //               required 
+  //             />
+  //           </div>
+  //           <div className="form-group">
+  //             <label>Current Year/Semester</label>
+  //             <select 
+  //               value={newStudent.currentYear}
+  //               onChange={(e) => setNewStudent({...newStudent, currentYear: e.target.value})}
+  //               required
+  //             >
+  //               <option value="">Select Current Year</option>
+  //               <option value="1st Year">1st Year</option>
+  //               <option value="2nd Year">2nd Year</option>
+  //               <option value="3rd Year">3rd Year</option>
+  //               <option value="4th Year">4th Year</option>
+  //             </select>
+  //           </div>
+  //         </div>
+  //       </div>
 
-        <button type="submit" className="submit-btn">Enroll Student</button>
-      </form>
-    </div>
-  );
+  //       <button type="submit" className="submit-btn">Enroll Student</button>
+  //     </form>
+  //   </div>
+  // );
 
 
 
@@ -1736,7 +1736,7 @@ const handleSendMessage = async () => {
       case 'overview':
         return renderOverview();
       case 'students':
-        return renderStudentEnrollment();
+        return (<PsychologyStudentEnrollment/>);
       case 'sessions':
         return renderSessions();
       case 'seminars':

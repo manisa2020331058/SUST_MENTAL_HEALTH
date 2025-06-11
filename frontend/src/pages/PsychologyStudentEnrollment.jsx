@@ -1,4 +1,4 @@
-import React, { useState,useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { User, Mail, Phone, MapPin, Calendar, GraduationCap, FileText, Camera, Check } from 'lucide-react';
 
 import api from '../utils/api';
@@ -62,14 +62,14 @@ const PsychologyEnrollmentForm = () => {
     });
   };
 
-const handleEnrollStudent = useCallback(async (e) => {
+  const handleEnrollStudent = useCallback(async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
-      const imageBase64 = newStudent.profilePicture 
-        ? await convertFileToBase64(newStudent.profilePicture) 
+      const imageBase64 = newStudent.profilePicture
+        ? await convertFileToBase64(newStudent.profilePicture)
         : null;
-      
+
       const studentData = {
         personalInfo: {
           name: newStudent.name,
@@ -91,17 +91,17 @@ const handleEnrollStudent = useCallback(async (e) => {
           currentYear: newStudent.currentYear,
         }
       };
-      
+
       const response = await api.students.enroll(studentData);
       await fetchStudents();
       // Success toast
       toast.success(response.data.message || "Student enrolled successfully!");
-      
+
       // Reset form
       setNewStudent({
         name: '', gender: '', dateOfBirth: '', age: '', email: '',
         profileImage: '', phoneNumber: '', alternatePhoneNumber: '',
-        communicationPreference: '', registrationNumber: '', 
+        communicationPreference: '', registrationNumber: '',
         department: '', session: '', currentYear: '', address: ''
       });
 
