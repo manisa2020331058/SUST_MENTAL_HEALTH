@@ -1,4 +1,5 @@
-import React, { useState, useEffect,useCallback, useMemo, useRef } from 'react';
+import React, { useState, useRef, useEffect ,useCallback} from 'react';
+import { User, Mail, Phone, MapPin, GraduationCap, Calendar, Camera, UserCheck } from 'lucide-react';
 import { 
   FaUser,        // Student Enrollment
   FaCalendar,    // Therapy Schedule
@@ -26,6 +27,7 @@ import { ToastContainer } from 'react-toastify';
 import { useChat } from '../contexts/ChatContext';
 import { useNavigate } from 'react-router-dom';
 import PsychologistOverview from './PsychologistOverview';
+import PsychologyStudentEnrollment from './PsychologyStudentEnrollment';
 
 const defaultProfile = {
   personalInfo: {
@@ -424,6 +426,8 @@ const fetchSeminars = useCallback(async () => {
     address:'',
   });
 
+
+  
   const [newSession, setNewSession] = useState({
     studentId: '',
     date: '',
@@ -801,6 +805,41 @@ const handleSendMessage = async () => {
 
   const renderOverview = PsychologistOverview;
 
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formProgress, setFormProgress] = useState(0);
+  
+  
+  // Calculate form progress
+  React.useEffect(() => {
+      const fields = Object.values(newStudent);
+      const filledFields = fields.filter(field => field !== '' && field !== null).length;
+      const progress = (filledFields / fields.length) * 100;
+      setFormProgress(progress);
+  }, [newStudent]);
+  
+  const FormSection = ({ title, icon: Icon, children }) => (
+      <div className="form-section">
+          <div className="section-header">
+              <Icon className="section-icon" size={24} />
+              <h3>{title}</h3>
+          </div>
+          {children}
+      </div>
+  );
+
+  const InputGroup = ({ label, icon: Icon, children, required = false }) => (
+      <div className="form-group">
+          <label className="form-label">
+              {Icon && <Icon size={18} className="label-icon" />}
+              {label}
+              {required && <span className="required">*</span>}
+          </label>
+          {children}
+      </div>
+  );
+
+
   const renderStudentEnrollment = () => (
     <div className="student-enrollment-section">
       <h2>Student Enrollment</h2>
@@ -1022,6 +1061,8 @@ const handleSendMessage = async () => {
       </form>
     </div>
   );
+
+
 
  const renderSessions = () => (
   <div className="sessions-container">
@@ -1775,7 +1816,7 @@ const handleSendMessage = async () => {
               />
             )}
             {activeSection === 'sessions' && renderSessions()}
-            {activeSection === 'students' && renderStudentEnrollment()}
+            {activeSection === 'students' && <PsychologyStudentEnrollment/>}
             {activeSection === 'seminars' && renderSeminars()}
             {activeSection === 'messages' && renderMessages()}
           </>

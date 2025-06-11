@@ -41,7 +41,6 @@ router.get('/email/:email', protect, psychologistOnly, async (req, res) => {
     if (!psychologist) {
       return res.status(404).json({ message: 'Psychologist not found' });
     }
-
     res.json(psychologist);
   } catch (error) {
     console.error('Error fetching psychologist by email:', error);
@@ -88,20 +87,50 @@ router.get('/getSessions/:psychologistId', protect, psychologistOnly, async (req
   try {
     const psychologistId = req.params.psychologistId;
 
-    console.log('Fetching sessions for psychologist1:', psychologistId);
+    //console.log('Fetching sessions for psychologist1:', psychologistId);
 
     if (!psychologistId || psychologistId === 'null') {
       return res.status(400).json({ message: 'Valid psychologist ID is required' });
     }
 
-    // Fetch sessions created by this psychologist
-    
+    const sessions = await Session.find({ psychologist: psychologistId });
 
+    //console.log('Fetched sessions:', sessions.length);
+    if (sessions.length === 0) {
+      return res.status(404).json({ message: 'No sessions found for this psychologist' });
+    }
+
+    const formattedSessions = await Promise.all(
+      sessions.map(async (session, index) => {
+        // Fetch student name
+        const student = await Student.findById(session.student);
+
+        return {
+          id: index + 1,
+          studentId: session.student.toString(),
+          studentName: student?.personalInfo?.name || 'Unknown',
+          date: session.date?.toISOString().split('T')[0] || 'N/A',
+          time: new Date(`1970-01-01T${session.time}+06:00`).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Asia/Dhaka'
+          }),
+          duration: session.duration,
+          type: session.type,
+          status: session.status
+        };
+           
+      })
+    );
+
+    res.status(200).json(formattedSessions);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error while fetching sessions' });
   }
 });
+
 
 
 

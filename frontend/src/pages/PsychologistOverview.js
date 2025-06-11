@@ -1,5 +1,6 @@
 import React, { useState, useMemo,useEffect } from 'react';
-import { Calendar, Clock, Users, Video, Plus, MoreVertical, Play, Edit, Trash2 } from 'lucide-react';
+// Add ChevronLeft and ChevronRight to your lucide-react import
+import { Calendar, Clock, Users, Video, Plus, MoreVertical, Play, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import api from '../utils/api'; // Adjust the import path as necessary
 import { useParams } from 'react-router-dom';
@@ -7,11 +8,12 @@ import { useParams } from 'react-router-dom';
 const PsychologistOverview = ({profile}) => {
     // Sample data - replace with your actual data
     const PsychologistEmail = profile.contactInfo?.email;
-    console.log('Psychologist Email:', PsychologistEmail);
+    //console.log('Psychologist Email:', PsychologistEmail);
     // find the psychologist by calling an api
     const [psychologist, setPsychologist] = useState(null);
 
-    const [psychologistId, setPsychologistId] = useState(null);
+    const [psychologistIdInPsychologistCollection, setPsychologistIdInPsychologistCollection] = useState(null);
+    const [psychologistId, setPsychologistId] = useState(null); 
 
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -21,8 +23,13 @@ const PsychologistOverview = ({profile}) => {
     useEffect(() => {
         const fetchPsychologistID = async () => {
             try {
+                if (!PsychologistEmail || PsychologistEmail.trim() === '') {
+                    console.warn('PsychologistEmail is missing, skipping fetch');
+                    return;
+                }
                 const response = await api.psychologists.getByEmail(PsychologistEmail);
                 setPsychologist(response.data);
+                setPsychologistIdInPsychologistCollection(response.data._id);
                 setPsychologistId(response.data.user);
                 //console.log('Fetched Psychologist:', response.data);
             } catch (error) {
@@ -83,14 +90,15 @@ const PsychologistOverview = ({profile}) => {
 
     const [sessions, setSessions] = useState([]);
     
+
     useEffect(() => {
         if (!psychologistId) return;
         const fetchSessions = async () => {
             try {
-                console.log('Fetching sessions for psychologistId:', psychologistId);
-                const response = await api.psychologists.getSessions(psychologistId);
+                //console.log('Fetching sessions for psychologistId:', psychologistId);
+                const response = await api.psychologists.getSessions(psychologistIdInPsychologistCollection);
                 setSessions(response.data);
-                console.log('Fetched Sessions:', response.data);
+                //console.log('Fetched Sessions:', response.data);
             } catch (error) {
                 console.error('Error fetching sessions:', error);
             }
@@ -174,6 +182,24 @@ const PsychologistOverview = ({profile}) => {
         // Implement session start logic
         console.log('Starting session:', session);
         alert(`Starting session with ${session.studentName}`);
+    };
+
+    // ... inside the PsychologistOverview component
+
+    const handlePrevMonth = () => {
+        setSelectedDate(prevDate => {
+            const newDate = new Date(prevDate);
+            newDate.setMonth(newDate.getMonth() - 1);
+            return newDate;
+        });
+    };
+
+    const handleNextMonth = () => {
+        setSelectedDate(prevDate => {
+            const newDate = new Date(prevDate);
+            newDate.setMonth(newDate.getMonth() + 1);
+            return newDate;
+        });
     };
 
     const formatDate = (date) => {
@@ -272,10 +298,33 @@ const PsychologistOverview = ({profile}) => {
                     </h3>
 
                     {/* Calendar Header */}
+                    {/* Calendar Header */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+
+                        {/* START: Previous Month Button */}
+                        <button
+                            onClick={handlePrevMonth}
+                            aria-label="Previous month"
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', borderRadius: '50%' }}
+                        >
+                            <ChevronLeft style={{ width: '20px', height: '20px', color: '#475569' }} />
+                        </button>
+                        {/* END: Previous Month Button */}
+
                         <h4 style={{ fontSize: '18px', fontWeight: '600', color: '#374151', margin: 0 }}>
                             {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                         </h4>
+
+                        {/* START: Next Month Button */}
+                        <button
+                            onClick={handleNextMonth}
+                            aria-label="Next month"
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', borderRadius: '50%' }}
+                        >
+                            <ChevronRight style={{ width: '20px', height: '20px', color: '#475569' }} />
+                        </button>
+                        {/* END: Next Month Button */}
+
                     </div>
 
                     {/* Calendar Grid */}
@@ -502,7 +551,7 @@ const PsychologistOverview = ({profile}) => {
             </div>
 
             {/* Upcoming Sessions Section */}
-            <div style={{
+            {/* <div style={{
                 backgroundColor: '#ffffff',
                 padding: '24px',
                 borderRadius: '16px',
@@ -585,7 +634,7 @@ const PsychologistOverview = ({profile}) => {
                         No upcoming sessions in the next 7 days
                     </p>
                 )}
-            </div>
+            </div> */}
 
             {/* New Session Modal */}
             {showNewSessionModal && (
