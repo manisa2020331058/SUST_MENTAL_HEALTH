@@ -15,7 +15,10 @@ import {
   FaNewspaper,
   FaExternalLinkAlt,
   FaSearch,
-  FaQuoteLeft
+  FaQuoteLeft,
+  FaGamepad,
+  FaCube,
+  FaPuzzlePiece,
 } from "react-icons/fa"
 import api from "../utils/api"
 import "../styles/studentDashboard.css"
@@ -93,12 +96,49 @@ const PsychologistCard = ({ name, specialization, image }) => {
   )
 }
 
+// Spline 3D Component
+const SplineViewer = ({ url, className = "spline-viewer", modelType = "" }) => {
+  const splineRef = useRef(null)
+  const [key, setKey] = useState(0) // Force re-render key
+
+  useEffect(() => {
+    const script = document.createElement("script")
+    script.type = "module"
+    script.src = "https://unpkg.com/@splinetool/viewer@1.10.4/build/spline-viewer.js"
+    script.async = true
+
+    document.body.appendChild(script)
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script)
+      }
+    }
+  }, [])
+
+  // Force re-render when URL changes
+  useEffect(() => {
+    setKey((prev) => prev + 1)
+  }, [url])
+
+  return (
+    <div className={`spline-container ${className} ${modelType ? `model-${modelType}` : ""}`} ref={splineRef}>
+      <spline-viewer
+        key={key} // This forces a complete re-render
+        className="robot"
+        url={url || "https://prod.spline.design/dIhHNXIIQy-bipak/scene.splinecode"}
+      />
+    </div>
+  )
+}
+
 // Add state for articles and podcasts
 const StudentDashboard = () => {
   // UI State
   const [activeSection, setActiveSection] = useState("dashboard")
+  const [selectedGame, setSelectedGame] = useState("3d-robot")
 
-  const[userId,setUserId]=useState(null)
+  const [userId, setUserId] = useState(null)
 
   // Existing dashboard state
   const [dashboardData, setDashboardData] = useState({
@@ -139,58 +179,78 @@ const StudentDashboard = () => {
   // Chat with MINDMATE state
   const [isMindmateOpen, setIsMindmateOpen] = useState(false)
 
-  const [aiInputMessage, setAiInputMessage] = useState('');
-  const [aiChatHistory, setAiChatHistory] = useState([]);
+  const [aiInputMessage, setAiInputMessage] = useState("")
+  const [aiChatHistory, setAiChatHistory] = useState([])
 
+  const [quote, setQuote] = useState("")
+  const [quoteLoading, setQuoteLoading] = useState(true)
 
-  const [quote, setQuote] = useState('');
-  const [quoteLoading, setQuoteLoading] = useState(true);
+  const chatEndRef = useRef(null)
 
-  const chatEndRef = useRef(null);
+  // Game options for Playzone
+  const gameOptions = [
+    {
+      id: "3d-robot",
+      name: "3D Robot",
+      icon: FaRobot,
+      description: "Interactive 3D robot companion for relaxation",
+      splineUrl: "https://prod.spline.design/dIhHNXIIQy-bipak/scene.splinecode",
+    },
+    {
+      id: "fidget-cube",
+      name: "Fidget Cube",
+      icon: FaCube,
+      description: "Interactive fidget cube for stress relief",
+      splineUrl: "https://prod.spline.design/rWUEDH1r6GObOYkj/scene.splinecode",
+    },
+    {
+      id: "whac-a-thief",
+      name: "Whac-a-Thief",
+      icon: FaPuzzlePiece,
+      description: "Fun interactive game to distract from stress",
+      splineUrl: "https://prod.spline.design/w2QvmcPB3wyoy3oP/scene.splinecode",
+    },
+  ]
 
   useEffect(() => {
     if (chatEndRef.current) {
-      chatEndRef.current.scrollTop = chatEndRef.current.scrollHeight;
+      chatEndRef.current.scrollTop = chatEndRef.current.scrollHeight
     }
-  }, [aiChatHistory]);
-
+  }, [aiChatHistory])
 
   const sendAiMessage = async () => {
-    if (!aiInputMessage.trim()) return;
+    if (!aiInputMessage.trim()) return
 
-    const userText = aiInputMessage;
-    setAiChatHistory([...aiChatHistory, { role: 'user', text: userText }]);
-    setAiInputMessage('');
+    const userText = aiInputMessage
+    setAiChatHistory([...aiChatHistory, { role: "user", text: userText }])
+    setAiInputMessage("")
 
     try {
-      const response = await fetch('http://localhost:5000/api/ai/aiChat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, message: userText })
-      });
+      const response = await fetch("http://localhost:5000/api/ai/aiChat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, message: userText }),
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (data.reply) {
-        setAiChatHistory(prev => [...prev, { role: 'bot', text: data.reply }]);
+        setAiChatHistory((prev) => [...prev, { role: "bot", text: data.reply }])
       } else {
-        setAiChatHistory(prev => [...prev, { role: 'bot', text: 'Sorry, something went wrong.' }]);
+        setAiChatHistory((prev) => [...prev, { role: "bot", text: "Sorry, something went wrong." }])
       }
 
       // Here call the update-summery api
       await fetch(`http://localhost:5000/api/ai/update-summary/${userId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ latestMessage: userText })
-      });
-
-
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ latestMessage: userText }),
+      })
     } catch (err) {
-      console.error(err);
-      setAiChatHistory(prev => [...prev, { role: 'bot', text: 'Error connecting to MindMate.' }]);
+      console.error(err)
+      setAiChatHistory((prev) => [...prev, { role: "bot", text: "Error connecting to MindMate." }])
     }
-  };
-
+  }
 
   // Add useEffect to fetch articles and podcasts
   useEffect(() => {
@@ -285,14 +345,14 @@ const StudentDashboard = () => {
         const dashboardResponse = await api.get("/students/dashboard-info")
 
         console.log(dashboardResponse.data.studentProfile.userId)
-        
+
         setUserId(dashboardResponse.data.studentProfile.userId)
 
         if (dashboardResponse.data.studentProfile.personalInfo.profileImage) {
           const profileImage = dashboardResponse.data.studentProfile.personalInfo.profileImage
           dashboardResponse.data.studentProfile.personalInfo.profileImage = `http://localhost:5000/${profileImage.replace(/^\/+/, "")}`
         }
-        setDashboardData(dashboardResponse.data)  
+        setDashboardData(dashboardResponse.data)
         setIsLoading(false)
       } catch (error) {
         console.error("Dashboard Fetch Error:", error)
@@ -307,24 +367,24 @@ const StudentDashboard = () => {
     fetchDashboardData()
   }, [])
 
-
   useEffect(() => {
     const fetchQuote = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/ai/getQuote/${userId}`);
-        const data = await res.json();
-        setQuote(data.quote);
+        const res = await fetch(`http://localhost:5000/api/ai/getQuote/${userId}`)
+        const data = await res.json()
+        setQuote(data.quote)
       } catch (err) {
-        console.error('Error fetching quote:', err);
-        setQuote("Stay strong. You're doing better than you think.");
+        console.error("Error fetching quote:", err)
+        setQuote("Stay strong. You're doing better than you think.")
       } finally {
-        setLoading(false);
+        setQuoteLoading(false)
       }
-    };
+    }
 
-    fetchQuote();
-  }, [userId]);
-
+    if (userId) {
+      fetchQuote()
+    }
+  }, [userId])
 
   // Fetch psychologists and seminars for resources section
   useEffect(() => {
@@ -517,12 +577,10 @@ const StudentDashboard = () => {
           {/* Other dashboard sections */}
 
           <div className="inspiration-quote-section">
-            <h3><FaQuoteLeft /> Daily Motivation</h3>
-            {loading ? (
-              <p>Loading quote...</p>
-            ) : (
-              <blockquote className="motivational-quote">{quote}</blockquote>
-            )}
+            <h3>
+              <FaQuoteLeft /> Daily Motivation
+            </h3>
+            {quoteLoading ? <p>Loading quote...</p> : <blockquote className="motivational-quote">{quote}</blockquote>}
           </div>
         </div>
       </div>
@@ -789,23 +847,15 @@ const StudentDashboard = () => {
               </button>
             </div>
 
-            
-
             <div className="mindmate-chat-area">
-
               {/* Chat Messages */}
               <div className="chat-messages" ref={chatEndRef}>
                 {aiChatHistory.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={`chat-bubble ${msg.role === 'user' ? 'user-msg' : 'bot-msg'}`}
-                  >
+                  <div key={idx} className={`chat-bubble ${msg.role === "user" ? "user-msg" : "bot-msg"}`}>
                     <p>{msg.text}</p>
                   </div>
-                  
                 ))}
               </div>
-
 
               {/* Input Area */}
               <div className="chat-input-area">
@@ -815,7 +865,7 @@ const StudentDashboard = () => {
                   value={aiInputMessage}
                   onChange={(e) => setAiInputMessage(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') sendAiMessage();
+                    if (e.key === "Enter") sendAiMessage()
                   }}
                 />
                 <button onClick={sendAiMessage}>
@@ -825,8 +875,67 @@ const StudentDashboard = () => {
             </div>
           </div>
         </div>
-      )}  
+      )}
+    </div>
+  )
 
+  const renderPlayzone = () => (
+    <div className="playzone-section">
+      <div className="playzone-header">
+        <h2>
+          <FaGamepad /> Playzone
+        </h2>
+        <p>Interactive games and activities for relaxation and stress relief</p>
+      </div>
+
+      <div className="game-selector">
+        <h3>Choose Your Activity</h3>
+        <div className="game-options">
+          {gameOptions.map((game) => (
+            <button
+              key={game.id}
+              className={`game-option ${selectedGame === game.id ? "active" : ""}`}
+              onClick={() => {
+                console.log("Selected game:", game.name, "URL:", game.splineUrl) // Debug log
+                setSelectedGame(game.id)
+              }}
+            >
+              <game.icon className="game-icon" />
+              <div className="game-info">
+                <h4>{game.name}</h4>
+                <p>{game.description}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="game-canvas-container">
+        <div className="game-canvas">
+          {(() => {
+            const selectedGameData = gameOptions.find((g) => g.id === selectedGame)
+            console.log("Rendering SplineViewer with URL:", selectedGameData?.splineUrl) // Debug log
+            return (
+              <SplineViewer url={selectedGameData?.splineUrl} className="playzone-spline" modelType={selectedGame} />
+            )
+          })()}
+        </div>
+        <div className="game-instructions">
+          <h4>How to Play</h4>
+          <p>
+            Interact with the 3D object using your mouse or touch. Let the gentle movements help you relax and focus.
+          </p>
+          <div className="relaxation-tips">
+            <h5>Relaxation Tips:</h5>
+            <ul>
+              <li>Take deep breaths while interacting</li>
+              <li>Focus on the smooth movements</li>
+              <li>Let your mind wander freely</li>
+              <li>Take breaks when needed</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   )
 
@@ -997,6 +1106,8 @@ const StudentDashboard = () => {
     switch (activeSection) {
       case "dashboard":
         return renderDashboard()
+      case "playzone":
+        return renderPlayzone()
       case "resources":
         return renderResources()
       case "seminars":
@@ -1033,6 +1144,11 @@ const StudentDashboard = () => {
           <li className={activeSection === "dashboard" ? "active" : ""}>
             <button onClick={() => setActiveSection("dashboard")}>
               <FaChartLine /> Dashboard
+            </button>
+          </li>
+          <li className={activeSection === "playzone" ? "active" : ""}>
+            <button onClick={() => setActiveSection("playzone")}>
+              <FaGamepad /> Playzone
             </button>
           </li>
           <li className={activeSection === "resources" ? "active" : ""}>
