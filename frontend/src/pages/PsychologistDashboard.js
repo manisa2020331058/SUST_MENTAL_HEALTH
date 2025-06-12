@@ -92,7 +92,7 @@ const [rescheduleData, setRescheduleData] = useState({
   time: ''
 });
 const [showNewSessionForm, setShowNewSessionForm] = useState(false);
-
+const [showModal, setShowModal] = useState(false);
    // New state for editing profile
    const [editedProfile, setEditedProfile] = useState(defaultProfile);
    const [isEditing, setIsEditing] = useState(false);
@@ -729,48 +729,39 @@ useEffect(() => {
 
 
   const handleCreateSeminar = async (e) => {
-    e.preventDefault();
-    
+    e.preventDefault()
     if (!newSeminar.title || !newSeminar.date || !newSeminar.time) {
-      setError('Please fill in all required fields for the seminar');
-      return;
+      setError('Please fill in all required fields')
+      return
     }
-
     try {
-      setLoading(true);
-      await api.seminars.create(newSeminar);
-      await fetchSeminars();
-      setNewSeminar({
-        title: '',
-        description: '',
-        date: '',
-        time: '',
-        location: '',
-        maxParticipants:'',
-      });
-      setError(null);
+      setLoading(true)
+      await api.seminars.create(newSeminar)
+      await fetchSeminars()
+      setNewSeminar({ title: '', description: '', date: '', time: '', location: '', maxParticipants: '' })
+      setError(null)
+      setShowModal(false)
+      toast.success('Seminar created!')
     } catch (err) {
-      setError('Error creating seminar: ' + (err.response?.data?.message || err.message));
+      setError('Error: ' + (err.response?.data?.message || err.message))
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const handleDeleteSeminar = async (seminarId) => {
-    if (!window.confirm('Are you sure you want to delete this seminar?')) return;
-  
+  const handleDeleteSeminar = async (id) => {
+    if (!window.confirm('Delete this seminar?')) return
     try {
-      setLoading(true);
-      await api.seminars.delete(seminarId);
-      toast.success('Seminar deleted successfully');
-      await fetchSeminars(); // Refresh list after delete
+      setLoading(true)
+      await api.seminars.delete(id)
+      await fetchSeminars()
+      toast.success('Deleted!')
     } catch (err) {
-      setError('Error deleting seminar: ' + (err.response?.data?.message || err.message));
+      setError('Error: ' + (err.response?.data?.message || err.message))
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
-  
+  }
 
 // Add message sending function
 const handleSendMessage = async () => {
@@ -1518,108 +1509,154 @@ const handleSendMessage = async () => {
   </div>
 );        
 
-  const renderSeminars = () => (
+ const renderSeminars = () => {
+  // compute “today midnight”
+  const today = new Date()
+  today.setHours(0,0,0,0)
+
+  // filter out past seminars
+  const upcoming = seminars.filter(s => new Date(s.date) >= today)
+
+  return (
     <div className="seminars-section">
-      <h2>Seminars</h2>
-      
-      <form onSubmit={handleCreateSeminar} className="create-seminar-form">
-        <h3>Create New Seminar</h3>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Title</label>
-            <input
-              type="text"
-              value={newSeminar.title}
-              onChange={(e) => setNewSeminar({...newSeminar, title: e.target.value})}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Description</label>
-            <textarea
-              value={newSeminar.description}
-              onChange={(e) => setNewSeminar({...newSeminar, description: e.target.value})}
-              required
-            />
-          </div>
-        </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>Date</label>
-            <input
-              type="date"
-              value={newSeminar.date}
-              onChange={(e) => setNewSeminar({...newSeminar, date: e.target.value})}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Time</label>
-            <input
-              type="time"
-              value={newSeminar.time}
-              onChange={(e) => setNewSeminar({...newSeminar, time: e.target.value})}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label>Location</label>
-            <input
-              type="text"
-              value={newSeminar.location}
-              onChange={(e) => setNewSeminar({...newSeminar, location: e.target.value})}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Maximum Participants</label>
-            <input
-              type="number"
-              value={newSeminar.maxParticipants}
-              onChange={(e) => setNewSeminar({...newSeminar, maxParticipants: parseInt(e.target.value)})}
-              min="1"
-              required
-            />
-          </div>
-        </div>
-
-        <button type="submit" className="create-seminar-btn">Create Seminar</button>
-      </form>
-
-      <div className="seminars-list">
-  <h2>Upcoming Seminars</h2>
-  {seminars.length > 0 ? (
-    <div className="seminar-cards">
-      {seminars.map((seminar) => (
-        <div key={seminar._id} className="seminar-card">
-          <h4>{seminar.title}</h4>
-          <p>{seminar.description}</p>
-          <div className="seminar-details">
-            <p><strong>Date:</strong> {new Date(seminar.date).toLocaleDateString()}</p>
-            <p><strong>Time:</strong> {seminar.time}</p>
-            <p><strong>Location:</strong> {seminar.location}</p>
-            <p><strong>Participants:</strong> {seminar.registeredParticipants}/{seminar.maxParticipants}</p>
-          </div>
-          <button
-              className="delete-button"
-              onClick={() => handleDeleteSeminar(seminar._id)}
+      {/* HEADER + LIST: only render when modal closed */}
+      {!showModal && (
+        <>
+          <div className="seminars-header">
+            <h2>Upcoming Mental Health Seminars</h2>
+            <button
+              className="add-seminar-btn"
+              onClick={() => setShowModal(true)}
             >
-              <FaTrash className="delete-icon" />
+              + Add New Seminar
             </button>
+          </div>
+
+          <div className="seminars-list">
+            {upcoming.length > 0 ? (
+              <div className="seminar-cards">
+                {upcoming.map((s) => (
+                  <div key={s._id} className="seminar-card">
+                    <h4>{s.title}</h4>
+                    <p>{s.description}</p>
+                    <div className="seminar-details">
+                      <p><strong>Date:</strong> {new Date(s.date).toLocaleDateString()}</p>
+                      <p><strong>Time:</strong> {s.time}</p>
+                      <p><strong>Location:</strong> {s.location}</p>
+                      <p><strong>Participants:</strong> {s.registeredParticipants}/{s.maxParticipants}</p>
+                    </div>
+                    <button
+                      className="delete-button"
+                      onClick={() => handleDeleteSeminar(s._id)}
+                    >
+                      <FaTrash className="delete-icon" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>No upcoming seminars</p>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* MODAL: only render when showModal === true */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <button
+              className="modal-close"
+              onClick={() => setShowModal(false)}
+            >
+              ×
+            </button>
+            <form onSubmit={handleCreateSeminar} className="create-seminar-form">
+              <h3>Create New Seminar</h3>
+              {error && <p className="error">{error}</p>}
+
+              {/* your form fields */}
+              <div className="modal-form-group">
+                <label>Title</label>
+                <input
+                  type="text"
+                  value={newSeminar.title}
+                  onChange={e => setNewSeminar({ ...newSeminar, title: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="modal-form-group">
+                <label>Description</label>
+                <textarea
+                  value={newSeminar.description}
+                  onChange={e => setNewSeminar({ ...newSeminar, description: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="modal-form-row">
+                <div className="modal-form-group">
+                  <label>Date</label>
+                  <input
+                    type="date"
+                    value={newSeminar.date}
+                    onChange={e => setNewSeminar({ ...newSeminar, date: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="modal-form-group">
+                  <label>Time</label>
+                  <input
+                    type="time"
+                    value={newSeminar.time}
+                    onChange={e => setNewSeminar({ ...newSeminar, time: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="modal-form-group">
+                <label>Location</label>
+                <input
+                  type="text"
+                  value={newSeminar.location}
+                  onChange={e => setNewSeminar({ ...newSeminar, location: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="modal-form-group">
+                <label>Maximum Participants</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={newSeminar.maxParticipants}
+                  onChange={e => setNewSeminar({
+                    ...newSeminar,
+                    maxParticipants: parseInt(e.target.value) || ''
+                  })}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="create-seminar-btn"
+                disabled={loading}
+              >
+                {loading ? 'Saving…' : 'Create Seminar'}
+              </button>
+            </form>
+          </div>
         </div>
-      ))}
-    </div>
-  ) : (
-    <p>No seminars scheduled</p>
-  )}
-</div>
+      )}
 
     </div>
-  );
+  )
+}
+  
   const renderMessages = () => (
     <div className="messages-section">
       <div className="students-list">
