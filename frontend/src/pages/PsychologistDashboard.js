@@ -16,7 +16,7 @@ import {
   FaAngleDown,
   FaAngleUp,
   FaHistory,
-  FaNotesMedical    // Search
+  FaNotesMedical
 } from 'react-icons/fa';
 import '../styles/PsychologistDashboard.css';
 import api from '../utils/api';

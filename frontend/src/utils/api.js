@@ -50,6 +50,8 @@ const sessions = {
   create: (data) => api.post('/sessions', data),
   getUpcoming: () => api.get('/sessions/psychologist/upcoming'),
   getPast: () => api.get('/sessions/psychologist/past'),
+  getPastOfAStudent: (studentId) => api.get(`/sessions/psychologist/pastOfAStudent/${studentId}`),
+  getUpcomingOfAStudent: (studentId) => api.get(`/sessions/psychologist/upcomingOfAStudent/${studentId}`),
   getAll: (filters) => api.get('/sessions/psychologist/all', { params: filters }),
   getByStudent: (studentId) => api.get(`/sessions/student/${studentId}`),
   getSingle: (sessionId) => api.get(`/sessions/${sessionId}`),
@@ -85,6 +87,7 @@ const psychologists = {
   getStudents: (psychologistId) => api.get(`/psychologists/getStudents/${psychologistId}`),
   getSessions: (psychologistId) => api.get(`/psychologists/getSessions/${psychologistId}`),
   getStudentInfo: (studentId) => api.get(`/psychologists/getStudentInfo/${studentId}`),
+  getStudentProfile: (studentId) => api.get(`/psychologists/${studentId}/profile`),
 };
 
 // Student related API calls
@@ -92,7 +95,7 @@ const students = {
   getAll: () => api.get('/psychologists/students'),
   enroll: (data) => api.post('/psychologists/students/enroll', data),
   getOne: (id) => api.get(`/students/${id}`),
-  update: (id, data) => api.put(`/students/${id}`, data)
+  update: (id, data) => api.put(`/students/${id}`, data),
 };
 
 // Admin related API calls

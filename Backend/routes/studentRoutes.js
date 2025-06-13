@@ -10,6 +10,8 @@ router.get('/dashboard-info', protect, studentOnly, studentController.getStudent
 router.post('/profile-picture', protect, studentOnly, studentController.updateProfilePicture);
 router.delete('/profile-picture', protect, studentOnly, studentController.removeProfilePicture);
 router.get('/verify-psychologist', protect, studentOnly, studentController.verifyPsychologistAssignment);
+// Get student profile
+
 
 // Add new routes for session notifications
 router.get('/session-notifications', protect, studentOnly, studentController.getSessionNotifications);

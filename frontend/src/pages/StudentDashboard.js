@@ -346,6 +346,8 @@ const StudentDashboard = () => {
 
         console.log(dashboardResponse.data.studentProfile.userId)
 
+        console.log("Dashboard Data:", dashboardResponse.data)
+
         setUserId(dashboardResponse.data.studentProfile.userId)
 
         if (dashboardResponse.data.studentProfile.personalInfo.profileImage) {

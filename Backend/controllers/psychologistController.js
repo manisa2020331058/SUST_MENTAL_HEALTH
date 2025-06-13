@@ -367,3 +367,23 @@ exports.enrollStudent = asyncHandler(async (req, res) => {
     }
   });
 });
+
+exports.getStudentProfile = asyncHandler(async (req, res) => {
+  try {
+    const student = await Student.findOne({ user: req.params.studentId }) 
+      .populate('personalInfo contactInfo academicInfo user', '-password')
+      .lean();
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    res.json(student);
+  } catch (error) {
+    console.error('Error fetching student profile:', error);
+    res.status(500).json({
+      message: 'Error fetching student profile',
+      error: error.message
+    });
+  }
+});

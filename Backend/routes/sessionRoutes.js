@@ -19,7 +19,8 @@ const {
   addSessionNotes,
   getAvailableTimeSlots,
   getPsychologistCalendar,
-
+  getPastSessionsOfAStudent,
+  getUpcomingSessionsOfAStudent,
 
 } = require('../controllers/sessionController');
 
@@ -27,8 +28,11 @@ const {
 router.post('/', protect, psychologistOnly, createSession);
 router.get('/psychologist/upcoming', protect, psychologistOnly, getUpcomingSessions);
 router.get('/psychologist/past', protect, psychologistOnly, getPastSessions);
+router.get('/psychologist/pastOfAStudent/:studentId', protect, psychologistOnly, getPastSessionsOfAStudent);
+router.get('/psychologist/upcomingOfAStudent/:studentId', protect, psychologistOnly, getUpcomingSessionsOfAStudent);
 router.get('/psychologist/all', protect, psychologistOnly, getPsychologistSessions);
 router.get('/student/:studentId', protect, psychologistOnly, getStudentSessions);
+
 
 // Session Management Routes
 router.patch('/:sessionId/status', protect, psychologistOnly, updateSessionStatus);

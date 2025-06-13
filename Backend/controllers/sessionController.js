@@ -405,3 +405,48 @@ exports.getSingleSession = asyncHandler(async (req, res) => {
 
   res.json(session);
 });
+
+
+exports.getPastSessionsOfAStudent = asyncHandler(async (req, res) => {
+  const student = await Student.findOne({ user: req.params.studentId });
+  if (!student) {
+    res.status(404);
+    throw new Error('Student not found');
+  }
+
+  const sessions = await Session.find({
+    student: student._id,
+    $or: [
+      { status: 'completed' },
+      { date: { $lt: new Date() } }
+    ]
+  }).populate({
+    path: 'student',
+    select: 'personalInfo academicInfo contactInfo user',
+    populate: { path: 'user', select: 'email status' }
+  }).sort({ date: -1, time: -1 });
+
+  res.json(sessions);
+});
+
+
+exports.getUpcomingSessionsOfAStudent = asyncHandler(async (req, res) => {
+  const student = await Student.findOne({ user: req.params.studentId });
+  if (!student) {
+    res.status(404);
+    throw new Error('Student not found');
+  }
+
+  const sessions = await Session.find({
+    student: student._id,
+    status: 'scheduled',
+    date: { $gte: new Date() }
+  }).populate({
+    path: 'student',
+    select: 'personalInfo academicInfo contactInfo user',
+    populate: { path: 'user', select: 'email status' }
+  }).sort({ date: 1, time: 1 });
+
+
+  res.json(sessions);
+})

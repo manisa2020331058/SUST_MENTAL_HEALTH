@@ -120,6 +120,10 @@ app.get('/', (req, res) => {
   });
 });
 
+// Serve uploads folder statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
 // Routes
 app.use('/api/ai', require('./routes/aiRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
