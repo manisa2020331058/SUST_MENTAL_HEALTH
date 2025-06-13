@@ -84,6 +84,7 @@ const psychologists = {
   getByEmail: (email) => api.get(`/psychologists/email/${email}`),
   getStudents: (psychologistId) => api.get(`/psychologists/getStudents/${psychologistId}`),
   getSessions: (psychologistId) => api.get(`/psychologists/getSessions/${psychologistId}`),
+  getStudentInfo: (studentId) => api.get(`/psychologists/getStudentInfo/${studentId}`),
 };
 
 // Student related API calls

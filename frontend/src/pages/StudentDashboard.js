@@ -373,6 +373,7 @@ const StudentDashboard = () => {
         const res = await fetch(`http://localhost:5000/api/ai/getQuote/${userId}`)
         const data = await res.json()
         setQuote(data.quote)
+        console.log("Fetched Quote:", data.quote)
       } catch (err) {
         console.error("Error fetching quote:", err)
         setQuote("Stay strong. You're doing better than you think.")
@@ -847,7 +848,7 @@ const StudentDashboard = () => {
               </button>
             </div>
 
-            <div className="mindmate-chat-area">
+            <div className="mindmate-chat-  area">
               {/* Chat Messages */}
               <div className="chat-messages" ref={chatEndRef}>
                 {aiChatHistory.map((msg, idx) => (

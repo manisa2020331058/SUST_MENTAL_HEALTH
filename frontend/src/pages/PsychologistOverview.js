@@ -1,11 +1,21 @@
-import React, { useState, useMemo,useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 // Add ChevronLeft and ChevronRight to your lucide-react import
 import { Calendar, Clock, Users, Video, Plus, MoreVertical, Play, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import api from '../utils/api'; // Adjust the import path as necessary
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
-const PsychologistOverview = ({profile}) => {
+const PsychologistOverview = ({ profile }) => {
+
+
+
+    const navigate = useNavigate();
+    const handleViewProfile = (studentId) => {
+        navigate('/psychologist/viewstudent/' + studentId);
+    };
+
+
+
     // Sample data - replace with your actual data
     const PsychologistEmail = profile.contactInfo?.email;
     //console.log('Psychologist Email:', PsychologistEmail);
@@ -13,7 +23,7 @@ const PsychologistOverview = ({profile}) => {
     const [psychologist, setPsychologist] = useState(null);
 
     const [psychologistIdInPsychologistCollection, setPsychologistIdInPsychologistCollection] = useState(null);
-    const [psychologistId, setPsychologistId] = useState(null); 
+    const [psychologistId, setPsychologistId] = useState(null);
 
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -42,7 +52,7 @@ const PsychologistOverview = ({profile}) => {
 
 
 
-    
+
 
 
 
@@ -89,7 +99,7 @@ const PsychologistOverview = ({profile}) => {
     // ]);
 
     const [sessions, setSessions] = useState([]);
-    
+
 
     useEffect(() => {
         if (!psychologistId) return;
@@ -144,9 +154,13 @@ const PsychologistOverview = ({profile}) => {
 
     const calendarDays = generateCalendarDays();
 
+    const formatDateForComparison = (date) => {
+        return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' }); // 'YYYY-MM-DD'
+    };
+
     // Get sessions for selected date
     const getSessionsForDate = (date) => {
-        const dateString = date.toISOString().split('T')[0];
+        const dateString = formatDateForComparison(date);
         return sessions.filter(session => session.date === dateString);
     };
 
@@ -210,6 +224,8 @@ const PsychologistOverview = ({profile}) => {
             day: 'numeric'
         });
     };
+
+
 
     const isToday = (date) => {
         const today = new Date();
@@ -504,7 +520,7 @@ const PsychologistOverview = ({profile}) => {
                                             zIndex: 10,
                                             minWidth: '160px'
                                         }}>
-                                            <button
+                                            {/* <button
                                                 onClick={() => handleAddSession(student)}
                                                 style={{
                                                     width: '100%',
@@ -522,6 +538,26 @@ const PsychologistOverview = ({profile}) => {
                                             >
                                                 <Plus style={{ width: '16px', height: '16px' }} />
                                                 Add Session
+                                            </button> */}
+
+                                            <button
+                                                onClick={() => handleViewProfile(student.id)}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '12px 16px',
+                                                    backgroundColor: 'transparent',
+                                                    border: 'none',
+                                                    textAlign: 'left',
+                                                    cursor: 'pointer',
+                                                    fontSize: '14px',
+                                                    color: '#374151',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px'
+                                                }}
+                                            >
+                                                <Users style={{ width: '16px', height: '16px' }} />
+                                                View Profile
                                             </button>
                                             <button
                                                 style={{

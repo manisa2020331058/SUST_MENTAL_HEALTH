@@ -9,6 +9,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Resources from './pages/Resources.js';
 import { ChatProvider } from './contexts/ChatContext';
+import StudentProfile from './pages/StudentProfile.jsx';
 const App = () => {
   return (
     <Router>
@@ -20,6 +21,7 @@ const App = () => {
         <Route path="/resources" element={<Resources />} />
         <Route path="/psychologist" element={<PsychologistDashboard />} />
         <Route path="/student-dashboard" element={<StudentDashboard />} />
+        <Route path="/psychologist/viewstudent/:studentId" element={<StudentProfile />} />
       </Routes>
       <ToastContainer 
         position="top-right"

@@ -66,7 +66,7 @@ router.get('/getStudents/:psychologistId', protect, psychologistOnly, async (req
       userStudents.map(async (user, index) => {
 
         return {
-          id: index + 1,
+          id: user.user,
           name: user?.personalInfo?.name || 'Unknown',
           email: user?.contactInfo?.email,
           enrollDate: user?.createdAt?.toISOString().split('T')[0] || 'N/A',
@@ -130,6 +130,30 @@ router.get('/getSessions/:psychologistId', protect, psychologistOnly, async (req
     res.status(500).json({ message: 'Server error while fetching sessions' });
   }
 });
+
+
+// add student info route
+router.get('/getStudentInfo/:studentId', protect, psychologistOnly, async (req, res) => {
+  const studentId = req.params.studentId;
+
+  try {
+    const student = await Student.findOne({ user: studentId })
+
+    console.log('Fetching student info for ID:', studentId);
+    
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    console.log('Student info:', student);
+    res.status(200).json(student);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error while fetching student info' });
+  }
+});
+
 
 
 

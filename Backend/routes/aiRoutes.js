@@ -63,7 +63,7 @@ router.post('/aiChat', async (req, res) => {
         res.json({ reply });
 
     } catch (err) {
-        console.error('Error From AI:', err.message);
+        console.error('Error From AI Haha:', err.message);
         res.status(500).json({ error: 'Failed to fetch blog feed' });
     }
 });
