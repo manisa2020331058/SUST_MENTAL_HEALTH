@@ -5,8 +5,22 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 
+import { 
+  FaSignOutAlt, 
+} from 'react-icons/fa';
 
 const AdminDashboard = () => {
+
+const handleLogout = () => {
+    // Remove the token from local storage.
+    // The token might be stored under different keys, so we'll clear the most common ones.
+    localStorage.removeItem("token")
+    localStorage.removeItem("userInfo") // If you store user info separately
+
+    // Redirect to the login page
+    window.location.href = "http://localhost:3000/login"
+  }
+
   const [users, setUsers] = useState([]);
   const [psychologists, setPsychologists] = useState([]);
   const [activeTab, setActiveTab] = useState('users');
@@ -654,6 +668,12 @@ const renderAdminProfile = () => (
           onClick={() => setActiveTab('profile')}
         >
           Profile
+        </button>
+        <button
+          className="logout-button"
+          onClick={handleLogout}
+        >
+        <FaSignOutAlt /> Logout
         </button>
       </div>
       <div className="main-content">

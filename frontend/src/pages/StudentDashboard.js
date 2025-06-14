@@ -19,6 +19,7 @@ import {
   FaGamepad,
   FaCube,
   FaPuzzlePiece,
+  FaSignOutAlt, 
 } from "react-icons/fa"
 import api from "../utils/api"
 import "../styles/studentDashboard.css"
@@ -134,6 +135,18 @@ const SplineViewer = ({ url, className = "spline-viewer", modelType = "" }) => {
 
 // Add state for articles and podcasts
 const StudentDashboard = () => {
+
+const handleLogout = () => {
+    // Remove the token from local storage.
+    // The token might be stored under different keys, so we'll clear the most common ones.
+    localStorage.removeItem("token")
+    localStorage.removeItem("userInfo") // If you store user info separately
+
+    // Redirect to the login page
+    window.location.href = "http://localhost:3000/login"
+  }
+
+
   // UI State
   const [activeSection, setActiveSection] = useState("dashboard")
   const [selectedGame, setSelectedGame] = useState("3d-robot")
@@ -1185,6 +1198,11 @@ const StudentDashboard = () => {
           <li className={activeSection === "seminars" ? "active" : ""}>
             <button onClick={() => setActiveSection("seminars")}>
               <FaClipboardList /> Seminars
+            </button>
+          </li>
+          <li className="logout-button">
+            <button onClick={handleLogout}>
+              <FaSignOutAlt /> Logout
             </button>
           </li>
         </ul>

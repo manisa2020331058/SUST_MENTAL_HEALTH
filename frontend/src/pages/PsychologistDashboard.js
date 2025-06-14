@@ -16,7 +16,8 @@ import {
   FaAngleDown,
   FaAngleUp,
   FaHistory,
-  FaNotesMedical
+  FaNotesMedical,
+  FaSignOutAlt, 
 } from 'react-icons/fa';
 import '../styles/PsychologistDashboard.css';
 import api from '../utils/api';
@@ -54,6 +55,17 @@ const sanitizeValue = (value) => {
 };
 
 const PsychologistDashboard = () => {
+
+
+const handleLogout = () => {
+    // Remove the token from local storage.
+    // The token might be stored under different keys, so we'll clear the most common ones.
+    localStorage.removeItem("token")
+    localStorage.removeItem("userInfo") // If you store user info separately
+
+    // Redirect to the login page
+    window.location.href = "http://localhost:3000/login"
+  }
 
   // UI State
   const [activeSection, setActiveSection] = useState('overview');
@@ -1830,6 +1842,11 @@ const handleSendMessage = async () => {
                 <FaCommentDots /> Messages
              </button>
            </li>
+          <li className="logout-button">
+            <button onClick={handleLogout}>
+              <FaSignOutAlt /> Logout
+            </button>
+          </li>
         </ul>
       </nav>
 
