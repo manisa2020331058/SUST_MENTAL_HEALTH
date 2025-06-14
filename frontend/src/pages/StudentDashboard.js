@@ -19,7 +19,7 @@ import {
   FaGamepad,
   FaCube,
   FaPuzzlePiece,
-  FaSignOutAlt, 
+  FaSignOutAlt,
 } from "react-icons/fa"
 import api from "../utils/api"
 import "../styles/studentDashboard.css"
@@ -136,7 +136,7 @@ const SplineViewer = ({ url, className = "spline-viewer", modelType = "" }) => {
 // Add state for articles and podcasts
 const StudentDashboard = () => {
 
-const handleLogout = () => {
+  const handleLogout = () => {
     // Remove the token from local storage.
     // The token might be stored under different keys, so we'll clear the most common ones.
     localStorage.removeItem("token")
@@ -197,6 +197,7 @@ const handleLogout = () => {
 
   const [quote, setQuote] = useState("")
   const [quoteLoading, setQuoteLoading] = useState(true)
+
 
   const chatEndRef = useRef(null)
 
@@ -585,42 +586,42 @@ const handleLogout = () => {
 
       {/* Chat with MINDMATE Button */}
       <div className="mindmate-section">
-        <button className="mindmate-chat-btn" onClick={() => setIsMindmateOpen(true)}>
+        {/* <button className="mindmate-chat-btn" onClick={() => setIsMindmateOpen(true)}>
           <FaRobot />
           <span>Chat with MINDMATE</span>
-        </button>
+        </button> */}
         <div className="dashboard">
           {/* Other dashboard sections */}
 
           <div className="daily-motivation-section">
-  <div className="motivation-header">
-    <div className="quote-icon-wrapper">
-      <FaQuoteLeft className="quote-icon" />
-    </div>
-    <h3 className="motivation-title">Daily Motivation</h3>
-  </div>
-  <div className="quote-container">
-    {quoteLoading ? (
-      <div className="quote-loading">
-        <div className="loading-dots">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-        <p>Fetching your daily inspiration...</p>
-      </div>
-    ) : (
-      <blockquote className="motivational-quote">
-        <span className="quote-text">{quote}</span>
-        <div className="quote-decoration">
-          <div className="quote-line"></div>
-          <div className="quote-heart">💙</div>
-          <div className="quote-line"></div>
-        </div>
-      </blockquote>
-    )}
-  </div>
-</div>
+            <div className="motivation-header">
+              <div className="quote-icon-wrapper">
+                <FaQuoteLeft className="quote-icon" />
+              </div>
+              <h3 className="motivation-title">Daily Motivation</h3>
+            </div>
+            <div className="quote-container">
+              {quoteLoading ? (
+                <div className="quote-loading">
+                  <div className="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <p>Fetching your daily inspiration...</p>
+                </div>
+              ) : (
+                <blockquote className="motivational-quote">
+                  <span className="quote-text">{quote}</span>
+                  <div className="quote-decoration">
+                    <div className="quote-line"></div>
+                    <div className="quote-heart">💙</div>
+                    <div className="quote-line"></div>
+                  </div>
+                </blockquote>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -717,12 +718,27 @@ const handleLogout = () => {
       {/* Chat Widget */}
       {dashboardData.createdBy && (
         <div className="chat-widget">
-          <div className="chat-trigger" onClick={() => setIsChatOpen(!isChatOpen)}>
-            <FaCommentDots />
-            {!isChatOpen && messages.filter((m) => !m.read).length > 0 && (
-              <span className="chat-notification-badge">{messages.filter((m) => !m.read).length}</span>
-            )}
+
+          <div className="chat-triggers-wrapper">
+            {/* MindMate Chat Trigger */}
+            
+            <div className="chat-trigger mindmate-trigger" onClick={() => setIsMindmateOpen(true)}>
+              <FaRobot />
+            </div>
+
+
+            {/* User Chat Trigger */}
+            <div className="chat-trigger" onClick={() => setIsChatOpen(!isChatOpen)}>
+              <FaCommentDots />
+              {!isChatOpen && messages.filter((m) => !m.read).length > 0 && (
+                <span className="chat-notification-badge">
+                  {messages.filter((m) => !m.read).length}
+                </span>
+              )}
+            </div>
+            
           </div>
+
 
           {isChatOpen && (
             <div className="chat-modal">
@@ -876,7 +892,7 @@ const handleLogout = () => {
       {/* MINDMATE Chat Modal */}
       {isMindmateOpen && (
         <div className="modal-backdrop">
-          <div className="modal-content mindmate-modal">
+          <div className="modal-content">
             <div className="chat-header">
               <h3>
                 <FaRobot /> Chat with MINDMATE
@@ -886,7 +902,7 @@ const handleLogout = () => {
               </button>
             </div>
 
-            <div className="mindmate-chat-  area">
+            <div className="mindmate-chat-area">
               {/* Chat Messages */}
               <div className="chat-messages" ref={chatEndRef}>
                 {aiChatHistory.map((msg, idx) => (
