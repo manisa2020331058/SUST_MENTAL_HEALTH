@@ -377,6 +377,8 @@ exports.getStudentProfile = asyncHandler(async (req, res) => {
     if (!student) {
       return res.status(404).json({ message: 'Student not found' });
     }
+    const aiChats = await StudentAiChat.find({ userId: req.params.studentId }, 'summary').lean();
+    student.aiSummaries = aiChats.map(chat => chat.summary);
 
     res.json(student);
   } catch (error) {

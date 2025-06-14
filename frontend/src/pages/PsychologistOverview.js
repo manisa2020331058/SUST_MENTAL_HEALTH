@@ -407,7 +407,7 @@ const PsychologistOverview = ({ profile }) => {
                                                 {session.time} • {session.duration} min • {session.type}
                                             </p>
                                         </div>
-                                        <button
+                                        {/* <button
                                             onClick={() => handleStartSession(session)}
                                             style={{
                                                 backgroundColor: '#10b981',
@@ -425,7 +425,7 @@ const PsychologistOverview = ({ profile }) => {
                                         >
                                             <Play style={{ width: '12px', height: '12px' }} />
                                             Start
-                                        </button>
+                                        </button> */}
                                     </div>
                                 ))}
                             </div>
