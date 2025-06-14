@@ -579,12 +579,35 @@ const StudentDashboard = () => {
         <div className="dashboard">
           {/* Other dashboard sections */}
 
-          <div className="inspiration-quote-section">
-            <h3>
-              <FaQuoteLeft /> Daily Motivation
-            </h3>
-            {quoteLoading ? <p>Loading quote...</p> : <blockquote className="motivational-quote">{quote}</blockquote>}
-          </div>
+          <div className="daily-motivation-section">
+  <div className="motivation-header">
+    <div className="quote-icon-wrapper">
+      <FaQuoteLeft className="quote-icon" />
+    </div>
+    <h3 className="motivation-title">Daily Motivation</h3>
+  </div>
+  <div className="quote-container">
+    {quoteLoading ? (
+      <div className="quote-loading">
+        <div className="loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <p>Fetching your daily inspiration...</p>
+      </div>
+    ) : (
+      <blockquote className="motivational-quote">
+        <span className="quote-text">{quote}</span>
+        <div className="quote-decoration">
+          <div className="quote-line"></div>
+          <div className="quote-heart">💙</div>
+          <div className="quote-line"></div>
+        </div>
+      </blockquote>
+    )}
+  </div>
+</div>
         </div>
       </div>
 
