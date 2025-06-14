@@ -852,7 +852,9 @@ const AdminDashboard = () => {
         <div className="loading">Loading profile...</div>
       ) : adminProfile ? (
         <div className="profile-details">
-          
+          <div className="profile-picture">
+            <img src={adminProfile.profilePicture || "/placeholder.svg?height=150&width=150"} alt="Admin Profile" />
+          </div>
           <div className="profile-info">
             <p>
               <strong>Name:</strong> {adminProfile.name}

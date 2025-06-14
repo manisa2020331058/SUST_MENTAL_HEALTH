@@ -5,7 +5,36 @@ const Admin = require("../models/Admin")
 const Psychologist = require("../models/Psychologist")
 const Student = require("../models/Student")
 const { psychologistProfilePicUpload } = require("../middleware/multerMiddleware")
-const { sendBulkEmail, sendIndividualEmails } = require("../config/emailService")
+const { sendBulkEmail, sendIndividualEmails, sendWelcomeEmail } = require("../config/emailService")
+const crypto = require("crypto")
+
+// Generate random password function
+const generateRandomPassword = (length = 8) => {
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+  let password = ""
+
+  // Ensure at least one character from each type
+  const lowercase = "abcdefghijklmnopqrstuvwxyz"
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  const numbers = "0123456789"
+  const symbols = "!@#$%^&*"
+
+  password += lowercase[Math.floor(Math.random() * lowercase.length)]
+  password += uppercase[Math.floor(Math.random() * uppercase.length)]
+  password += numbers[Math.floor(Math.random() * numbers.length)]
+  password += symbols[Math.floor(Math.random() * symbols.length)]
+
+  // Fill the rest randomly
+  for (let i = 4; i < length; i++) {
+    password += charset[Math.floor(Math.random() * charset.length)]
+  }
+
+  // Shuffle the password
+  return password
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("")
+}
 
 // Create Initial Admin (One-time setup)
 exports.createInitialAdmin = asyncHandler(async (req, res) => {
@@ -97,7 +126,7 @@ exports.hasPermission = (requiredPermission) => {
   })
 }
 
-// Enroll Psychologist - FIXED RESPONSE FORMAT
+// Enroll Psychologist - ENHANCED WITH AUTO PASSWORD & EMAIL
 exports.enrollPsychologist = asyncHandler(async (req, res) => {
   const { personalInfo, professionalInfo, contactInfo } = req.body
 
@@ -112,14 +141,18 @@ exports.enrollPsychologist = asyncHandler(async (req, res) => {
     throw new Error("User with this email already exists")
   }
 
+  // Generate random password
+  const randomPassword = generateRandomPassword(8)
+  console.log(`Generated password for ${contactInfo.email}: ${randomPassword}`)
+
   const profilePicPath = personalInfo.profileImage
     ? psychologistProfilePicUpload.uploadBase64Image(personalInfo.profileImage)
     : null
 
-  // Create user
+  // Create user with generated password
   const user = new User({
     email: contactInfo.email,
-    password: "123456",
+    password: randomPassword, // Use generated password
     role: "psychologist",
     status: "active",
     createdBy: req.user._id, // Admin who created the psychologist
@@ -141,7 +174,21 @@ exports.enrollPsychologist = asyncHandler(async (req, res) => {
   })
   await psychologist.save()
 
-  // FIXED: Return the same format as getPsychologists
+  // Send welcome email with login credentials
+  try {
+    await sendWelcomeEmail({
+      recipientEmail: contactInfo.email,
+      recipientName: personalInfo.name,
+      password: randomPassword,
+      specialization: professionalInfo.specialization,
+    })
+    console.log(`Welcome email sent successfully to ${contactInfo.email}`)
+  } catch (emailError) {
+    console.error("Failed to send welcome email:", emailError)
+    // Don't fail the enrollment if email fails, just log it
+  }
+
+  // Return the same format as getPsychologists
   const formattedResponse = {
     _id: psychologist._id,
     personalInfo: {
@@ -158,7 +205,7 @@ exports.enrollPsychologist = asyncHandler(async (req, res) => {
   }
 
   res.status(201).json({
-    message: "Psychologist enrolled successfully",
+    message: "Psychologist enrolled successfully and welcome email sent",
     psychologist: formattedResponse, // Return formatted response
   })
 })
