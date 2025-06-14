@@ -54,11 +54,11 @@ The goal of the portal is to facilitate better mental health management by provi
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB
 - **Authentication**: JWT
-- **AI Integration**: OpenAI (for chatbot and AI summary generation)
+- **AI Integration**: llama3-70b-8192 (for chatbot and AI summary generation)
 
 ## 📦 Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/sust-mental-health-portal.git
+   git clone https://github.com/manisa2020331058/SUST_MENTAL_HEALTH.git
    cd sust-mental-health-portal
