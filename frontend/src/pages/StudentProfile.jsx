@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState ,useRef} from 'react';
 import { useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+
 import {
     FaUser,
     FaCalendar,
@@ -28,6 +30,8 @@ import '../styles/StudentProfile.css'; // Import your CSS styles
 import api from '../utils/api'; // Adjust the import path as necessary
 
 const StudentProfile = () => {
+
+    const navigate = useNavigate();
     const { studentId } = useParams() || { studentId: 'demo-student' };
 
     const [student, setStudent] = useState(null);
@@ -39,6 +43,10 @@ const StudentProfile = () => {
     const [isAddingNotes, setIsAddingNotes] = useState(false);
     const [upcomingSessions, setUpcomingSessions] = useState([]);
     const [isRescheduling, setIsRescheduling] = useState(false);
+    const [showFullSummary, setShowFullSummary] = useState(false);
+
+    const [isOverflowing, setIsOverflowing] = useState(false);
+    const summaryRef = useRef(null);
 
     const [pastSessions, setPastSessions] = useState([]);
     const [userId, setUserId] = useState(null);
@@ -47,12 +55,23 @@ const StudentProfile = () => {
         time: ''
     });
 
+    const handleBack = () => {
+        navigate('/psychologist');
+    };
+
+    useEffect(() => {
+        if (summaryRef.current) {
+            const el = summaryRef.current;
+            setIsOverflowing(el.scrollHeight > el.clientHeight);
+        }
+    }, [student]);
+
     useEffect(() => {
         const fetchStudentInfo = async () => {
             try {
                 const res = await api.psychologists.getStudentProfile(studentId);
                 setStudent(res.data);
-                console.log('Student Info:', res.data.personalInfo.profileImage);
+                console.log('Student Info:', res.data);
             } catch (err) {
                 setError(err.response?.data?.message || 'Failed to fetch student info');
             } finally {
@@ -171,6 +190,9 @@ const StudentProfile = () => {
         <>
 
             <div className="student-profile-container">
+                <button className="back-button" onClick={handleBack}>
+                    ← Back
+                </button>
                 <div className="profile-wrapper">
                     {/* Modal for Adding Notes */}
                     {isAddingNotes && selectedSession && (
@@ -257,8 +279,35 @@ const StudentProfile = () => {
                                     <Mail size={18} />
                                     <span>{student?.contactInfo?.email || 'No email provided'}</span>
                                 </div>
+                                {student?.aiSummaries && student.aiSummaries.length > 0 && (
+                                    <div className="">
+                                        {student?.aiSummaries?.length > 0 && (
+                                            <div className="student-summary">
+                                                <h4>AI Summary</h4>
+                                                <p
+                                                    ref={summaryRef}
+                                                    className={showFullSummary ? 'expanded' : 'clamped'}
+                                                >
+                                                    {student.aiSummaries[0].replace(/^"|"$/g, '')}
+                                                </p>
+                                                {!showFullSummary && isOverflowing && (
+                                                    <button
+                                                        className="see-more-btn"
+                                                        onClick={() => setShowFullSummary(true)}
+                                                    >
+                                                        See more
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                             </div>
+                            
                         </div>
+
+                        
 
                         {/* Information Sections */}
                         <div className="info-sections">

@@ -16,10 +16,11 @@ import {
   FaAngleDown,
   FaAngleUp,
   FaHistory,
-  FaNotesMedical    // Search
+  FaNotesMedical
 } from 'react-icons/fa';
 import '../styles/PsychologistDashboard.css';
 import api from '../utils/api';
+
 import { PsychologistProfile } from './PsychologistProfile';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -28,7 +29,6 @@ import { useChat } from '../contexts/ChatContext';
 import { useNavigate } from 'react-router-dom';
 import PsychologistOverview from './PsychologistOverview';
 import PsychologyStudentEnrollment from './PsychologyStudentEnrollment';
-import '../styles/chat.css';
 
 const defaultProfile = {
   personalInfo: {
@@ -55,6 +55,17 @@ const sanitizeValue = (value) => {
 };
 
 const PsychologistDashboard = () => {
+
+
+const handleLogout = () => {
+    // Remove the token from local storage.
+    // The token might be stored under different keys, so we'll clear the most common ones.
+    localStorage.removeItem("token")
+    localStorage.removeItem("userInfo") // If you store user info separately
+
+    // Redirect to the login page
+    window.location.href = "http://localhost:3000/login"
+  }
 
   // UI State
   const [activeSection, setActiveSection] = useState('overview');
@@ -584,6 +595,31 @@ useEffect(() => {
       setLoading(false);
     }
   }, []); 
+
+  const PsychologistEmail = profile.contactInfo?.email;
+  const [psychologist, setPsychologist] = useState(null);
+  const [psychologistId, setPsychologistId] = useState(null);
+  const [psychologistIdInPsychologistCollection, setPsychologistIdInPsychologistCollection] = useState(null);
+
+  useEffect(() => {
+      const fetchPsychologistID = async () => {
+          try {
+              if (!PsychologistEmail || PsychologistEmail.trim() === '') {
+                  console.warn('PsychologistEmail is missing, skipping fetch');
+                  return;
+              }
+              const response = await api.psychologists.getByEmail(PsychologistEmail);
+              setPsychologist(response.data);
+              setPsychologistIdInPsychologistCollection(response.data._id);
+              setPsychologistId(response.data.user);
+              //console.log('Fetched Psychologist:', response.data);
+          } catch (error) {
+              console.error('Error fetching psychologist:', error);
+          }
+      };
+
+      fetchPsychologistID();
+  }, [PsychologistEmail]);
  
   const handleCreateSession = async (e) => {
     e.preventDefault();
@@ -1118,22 +1154,38 @@ const handleSendMessage = async () => {
         <div className="modal-content">
           <h3>Schedule New Session</h3>
           <form onSubmit={handleCreateSession}>
-            <div className="form-group">
-              <label>Student</label>
-              <select 
-                name="studentId" 
-                value={newSession.studentId}
-                onChange={(e) => setNewSession({...newSession, studentId: e.target.value})}
-                required
-              >
-                <option value="">Select a student</option>
-                {students.map(student => (
-                  <option key={student.studentId} value={student.studentId}>
-                    {student.personalInfo?.name || 'Unknown'} - {student.academicInfo?.registrationNumber || 'No ID'}
-                  </option>
-                ))}
-              </select>
-            </div>
+             <div className="form-group">
+               <label>Student</label>
+               <Select
+                 name="studentId"
+                 value={
+                   students
+                     .map(student => ({
+                       value: student.studentId,
+                       label: `${student.personalInfo?.name || "Unknown"} - ${student.academicInfo?.registrationNumber || "No ID"}`,
+                       studentId: student.studentId,
+                     }))
+                     .find(option => option.value === newSession.studentId) || null
+                 }
+                 onChange={(selectedOption) =>
+                   setNewSession({
+                     ...newSession,
+                     studentId: selectedOption?.value || "",
+                   })
+                 }
+                 options={students.map(student => ({
+                   value: student.studentId,
+                   label: `${student.personalInfo?.name || "Unknown"} - ${student.academicInfo?.registrationNumber || "No ID"}`,
+                   studentId: student.studentId,
+                 }))}
+                 placeholder="Search and select a student"
+                 isClearable
+                 className="react-select-container"
+                 classNamePrefix="react-select"
+               />
+             </div>
+
+
 
             <div className="form-group">
               <label>Session Type</label>
@@ -1143,9 +1195,15 @@ const handleSendMessage = async () => {
                 onChange={(e) => setNewSession({...newSession, type: e.target.value})}
                 required
               >
-                <option value="individual">Individual</option>
-                <option value="group">Group</option>
-                <option value="emergency">Emergency</option>
+                 <option value="">Select session type</option>
+                 <option value="initial_consultation">Initial Consultation</option>
+                 <option value="critical">Critical</option>
+                 <option value="followup">Follow-up</option>
+                 <option value="routine_check">Routine Check</option>
+                 <option value="crisis_intervention">Crisis Intervention</option>
+                 <option value="therapy_session">Therapy Session</option>
+                 <option value="mental_health_assessment">Mental Health Assessment</option>
+                 <option value="counseling">Counseling</option>
               </select>
             </div>
 
@@ -1697,7 +1755,94 @@ const handleSendMessage = async () => {
 
     </div>
   )
-}
+  }
+  
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const handlePasswordReset = async () => {
+    if (newPassword !== confirmPassword) {
+      setMessage("❌ Passwords do not match.")
+      return
+    }
+
+    try {
+
+      const response = await fetch("http://localhost:5000/api/reset-password/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: psychologistId,
+          newPassword: newPassword
+        }),
+      });
+
+
+      if (response.ok) {
+        setMessage("✅ Password updated successfully.")
+      } else {
+        const data = await response.json()
+        setMessage("❌ " + (data.message || "Failed to update password."))
+      }
+    } catch (error) {
+      setMessage("❌ Error: " + error.message)
+    }
+  }
+
+
+  const renderResetPassword = () => (
+    <div className="reset-password-container">
+      <h2>🔐 Reset Your Password</h2>
+
+      <div className="form-group">
+        <label>New Password:</label>
+        <div className="password-input">
+          <input
+            type={showNewPassword ? "text" : "password"}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Enter new password"
+          />
+          <button
+            type="button"
+            className="toggle-btn"
+            onClick={() => setShowNewPassword((prev) => !prev)}
+          >
+            {showNewPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label>Confirm Password:</label>
+        <div className="password-input">
+          <input
+            type={showConfirmPassword ? "text" : "password"}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Re-enter new password"
+          />
+          <button
+            type="button"
+            className="toggle-btn"
+            onClick={() => setShowConfirmPassword((prev) => !prev)}
+          >
+            {showConfirmPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
+      </div>
+
+      <button className="submit-btn" onClick={handlePasswordReset}>
+        🔄 Update Password
+      </button>
+
+      {message && <p className={`message ${message.startsWith("✅") ? "success" : "error"}`}>{message}</p>}
+    </div>
+  );
+
   
  const renderMessages = () => {
   const filteredStudents = students.filter(s =>
@@ -1899,7 +2044,17 @@ const handleSendMessage = async () => {
             <button onClick={() => setActiveSection('messages')}>
                 <FaCommentDots /> Messages
              </button>
-           </li>
+          </li>
+          <li className={activeSection === "resetPassword" ? "active" : ""}>
+              <button onClick={() => setActiveSection("resetPassword")}>
+                <FaKey /> Reset Password
+              </button>
+            </li>
+          <li className="logout-butto">
+            <button onClick={handleLogout}>
+              <FaSignOutAlt /> Logout
+            </button>
+          </li>
         </ul>
       </nav>
 
@@ -1928,6 +2083,7 @@ const handleSendMessage = async () => {
             {activeSection === 'students' && <PsychologyStudentEnrollment/>}
             {activeSection === 'seminars' && renderSeminars()}
             {activeSection === 'messages' && renderMessages()}
+            {activeSection === 'resetPassword' && renderResetPassword()}
           </>
         )}
       </main>

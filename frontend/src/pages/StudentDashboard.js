@@ -19,6 +19,8 @@ import {
   FaGamepad,
   FaCube,
   FaPuzzlePiece,
+  FaSignOutAlt,
+  FaKey,
 } from "react-icons/fa"
 import api from "../utils/api"
 import "../styles/studentDashboard.css"
@@ -134,6 +136,18 @@ const SplineViewer = ({ url, className = "spline-viewer", modelType = "" }) => {
 
 // Add state for articles and podcasts
 const StudentDashboard = () => {
+
+  const handleLogout = () => {
+    // Remove the token from local storage.
+    // The token might be stored under different keys, so we'll clear the most common ones.
+    localStorage.removeItem("token")
+    localStorage.removeItem("userInfo") // If you store user info separately
+
+    // Redirect to the login page
+    window.location.href = "http://localhost:3000/login"
+  }
+
+
   // UI State
   const [activeSection, setActiveSection] = useState("dashboard")
   const [selectedGame, setSelectedGame] = useState("3d-robot")
@@ -164,9 +178,7 @@ const StudentDashboard = () => {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const messagesEndRef = useRef(null)
   const { socket, messages: chatMessages, sendMessage: socketSendMessage } = useChat()
-  const [sending, setSending]  = useState(false)
-  const [open, setOpen]           = useState(false)
-   const endRef                    = useRef(null)
+
   // New state for resources and seminars
   const [psychologists, setPsychologists] = useState([])
   const [seminars, setSeminars] = useState([])
@@ -186,6 +198,7 @@ const StudentDashboard = () => {
 
   const [quote, setQuote] = useState("")
   const [quoteLoading, setQuoteLoading] = useState(true)
+
   const chatEndRef = useRef(null)
   const [profile, setProfile] = useState(null);
   const psychId = dashboardData.createdBy?.userId
@@ -578,18 +591,41 @@ const handleToggleChat = () => {
 
       {/* Chat with MINDMATE Button */}
       <div className="mindmate-section">
-        <button className="mindmate-chat-btn" onClick={() => setIsMindmateOpen(true)}>
+        {/* <button className="mindmate-chat-btn" onClick={() => setIsMindmateOpen(true)}>
           <FaRobot />
           <span>Chat with MINDMATE</span>
-        </button>
+        </button> */}
         <div className="dashboard">
           {/* Other dashboard sections */}
 
-          <div className="inspiration-quote-section">
-            <h3>
-              <FaQuoteLeft /> Daily Motivation
-            </h3>
-            {quoteLoading ? <p>Loading quote...</p> : <blockquote className="motivational-quote">{quote}</blockquote>}
+          <div className="daily-motivation-section">
+            <div className="motivation-header">
+              <div className="quote-icon-wrapper">
+                <FaQuoteLeft className="quote-icon" />
+              </div>
+              <h3 className="motivation-title">Daily Motivation</h3>
+            </div>
+            <div className="quote-container">
+              {quoteLoading ? (
+                <div className="quote-loading">
+                  <div className="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <p>Fetching your daily inspiration...</p>
+                </div>
+              ) : (
+                <blockquote className="motivational-quote">
+                  <span className="quote-text">{quote}</span>
+                  <div className="quote-decoration">
+                    <div className="quote-line"></div>
+                    <div className="quote-heart">💙</div>
+                    <div className="quote-line"></div>
+                  </div>
+                </blockquote>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -684,19 +720,15 @@ const handleToggleChat = () => {
       </div>
 
       {/* Rest of the dashboard content remains the same */}
-     {/* Chat Widget */}
-{dashboardData.createdBy && (
-  <div className="chat-widget">
-    {/* Trigger */}
-    <div className="chat-trigger" onClick={handleToggleChat}>
-      <FaCommentDots />
-      {!isChatOpen &&
-        messages.filter((m) => !m.read && m.sender !== dashboardData.studentProfile.userId).length > 0 && (
-          <span className="chat-notification-badge">
-            {messages.filter((m) => !m.read && m.sender !== dashboardData.studentProfile.userId).length}
-          </span>
-        )}
-    </div>
+      {/* Chat Widget */}
+      {dashboardData.createdBy && (
+        <div className="chat-widget">
+          <div className="chat-trigger" onClick={() => setIsChatOpen(!isChatOpen)}>
+            <FaCommentDots />
+            {!isChatOpen && messages.filter((m) => !m.read).length > 0 && (
+              <span className="chat-notification-badge">{messages.filter((m) => !m.read).length}</span>
+            )}
+          </div>
 
     {/* Modal */}
     {isChatOpen && (
@@ -861,7 +893,7 @@ const handleToggleChat = () => {
       {/* MINDMATE Chat Modal */}
       {isMindmateOpen && (
         <div className="modal-backdrop">
-          <div className="modal-content mindmate-modal">
+          <div className="modal-content">
             <div className="chat-header">
               <h3>
                 <FaRobot /> Chat with MINDMATE
@@ -871,7 +903,7 @@ const handleToggleChat = () => {
               </button>
             </div>
 
-            <div className="mindmate-chat-  area">
+            <div className="mindmate-chat-area">
               {/* Chat Messages */}
               <div className="chat-messages" ref={chatEndRef}>
                 {aiChatHistory.map((msg, idx) => (
@@ -1126,6 +1158,89 @@ const handleToggleChat = () => {
     </div>
   )
 
+  const handlePasswordReset = async () => {
+    if (newPassword !== confirmPassword) {
+      setMessage("❌ Passwords do not match.")
+      return
+    }
+
+    try {
+
+      const response = await fetch("http://localhost:5000/api/reset-password/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: userId,
+          newPassword: newPassword
+        }),
+      });
+      
+
+      if (response.ok) {
+        setMessage("✅ Password updated successfully.")
+      } else {
+        const data = await response.json()
+        setMessage("❌ " + (data.message || "Failed to update password."))
+      }
+    } catch (error) {
+      setMessage("❌ Error: " + error.message)
+    }
+  }
+
+
+  // ResetPasswordComponent.jsx
+
+  const renderResetPassword = () => (
+    <div className="reset-password-container">
+      <h2>🔐 Reset Your Password</h2>
+
+      <div className="form-group">
+        <label>New Password:</label>
+        <div className="password-input">
+          <input
+            type={showNewPassword ? "text" : "password"}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Enter new password"
+          />
+          <button
+            type="button"
+            className="toggle-btn"
+            onClick={() => setShowNewPassword((prev) => !prev)}
+          >
+            {showNewPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label>Confirm Password:</label>
+        <div className="password-input">
+          <input
+            type={showConfirmPassword ? "text" : "password"}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Re-enter new password"
+          />
+          <button
+            type="button"
+            className="toggle-btn"
+            onClick={() => setShowConfirmPassword((prev) => !prev)}
+          >
+            {showConfirmPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
+      </div>
+
+      <button className="submit-btn" onClick={handlePasswordReset}>
+        🔄 Update Password
+      </button>
+
+      {message && <p className={`message ${message.startsWith("✅") ? "success" : "error"}`}>{message}</p>}
+    </div>
+  );
+
+
   const renderContent = () => {
     switch (activeSection) {
       case "dashboard":
@@ -1136,6 +1251,8 @@ const handleToggleChat = () => {
         return renderResources()
       case "seminars":
         return renderSeminars()
+      case "resetPassword":
+        return renderResetPassword()
       default:
         return renderDashboard()
     }
@@ -1183,6 +1300,16 @@ const handleToggleChat = () => {
           <li className={activeSection === "seminars" ? "active" : ""}>
             <button onClick={() => setActiveSection("seminars")}>
               <FaClipboardList /> Seminars
+            </button>
+          </li>
+          <li className={activeSection === "resetPassword" ? "active" : ""}>
+            <button onClick={() => setActiveSection("resetPassword")}>
+              <FaKey /> Reset Password
+            </button>
+          </li>
+          <li className="logout-butto">
+            <button onClick={handleLogout}>
+              <FaSignOutAlt /> Logout
             </button>
           </li>
         </ul>
