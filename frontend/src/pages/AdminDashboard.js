@@ -924,7 +924,7 @@ const AdminDashboard = () => {
           <button className={activeTab === "profile" ? "active" : ""} onClick={() => setActiveTab("profile")}>
             <FaUser /> Profile
           </button>
-          <button className="logout-button" onClick={handleLogout}>
+          <button className="logout-butto" onClick={handleLogout}>
             <FaSignOutAlt /> Logout
           </button>
         </div>

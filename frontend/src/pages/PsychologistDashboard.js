@@ -21,6 +21,7 @@ import {
 } from 'react-icons/fa';
 import '../styles/PsychologistDashboard.css';
 import api from '../utils/api';
+
 import { PsychologistProfile } from './PsychologistProfile';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -29,7 +30,7 @@ import { useChat } from '../contexts/ChatContext';
 import { useNavigate } from 'react-router-dom';
 import PsychologistOverview from './PsychologistOverview';
 import PsychologyStudentEnrollment from './PsychologyStudentEnrollment';
-
+import Select from 'react-select';
 const defaultProfile = {
   personalInfo: {
     name: '',
@@ -1088,22 +1089,38 @@ const handleSendMessage = async () => {
         <div className="modal-content">
           <h3>Schedule New Session</h3>
           <form onSubmit={handleCreateSession}>
-            <div className="form-group">
-              <label>Student</label>
-              <select 
-                name="studentId" 
-                value={newSession.studentId}
-                onChange={(e) => setNewSession({...newSession, studentId: e.target.value})}
-                required
-              >
-                <option value="">Select a student</option>
-                {students.map(student => (
-                  <option key={student.studentId} value={student.studentId}>
-                    {student.personalInfo?.name || 'Unknown'} - {student.academicInfo?.registrationNumber || 'No ID'}
-                  </option>
-                ))}
-              </select>
-            </div>
+             <div className="form-group">
+               <label>Student</label>
+               <Select
+                 name="studentId"
+                 value={
+                   students
+                     .map(student => ({
+                       value: student.studentId,
+                       label: `${student.personalInfo?.name || "Unknown"} - ${student.academicInfo?.registrationNumber || "No ID"}`,
+                       studentId: student.studentId,
+                     }))
+                     .find(option => option.value === newSession.studentId) || null
+                 }
+                 onChange={(selectedOption) =>
+                   setNewSession({
+                     ...newSession,
+                     studentId: selectedOption?.value || "",
+                   })
+                 }
+                 options={students.map(student => ({
+                   value: student.studentId,
+                   label: `${student.personalInfo?.name || "Unknown"} - ${student.academicInfo?.registrationNumber || "No ID"}`,
+                   studentId: student.studentId,
+                 }))}
+                 placeholder="Search and select a student"
+                 isClearable
+                 className="react-select-container"
+                 classNamePrefix="react-select"
+               />
+             </div>
+
+
 
             <div className="form-group">
               <label>Session Type</label>
@@ -1113,9 +1130,15 @@ const handleSendMessage = async () => {
                 onChange={(e) => setNewSession({...newSession, type: e.target.value})}
                 required
               >
-                <option value="individual">Individual</option>
-                <option value="group">Group</option>
-                <option value="emergency">Emergency</option>
+                 <option value="">Select session type</option>
+                 <option value="initial_consultation">Initial Consultation</option>
+                 <option value="critical">Critical</option>
+                 <option value="followup">Follow-up</option>
+                 <option value="routine_check">Routine Check</option>
+                 <option value="crisis_intervention">Crisis Intervention</option>
+                 <option value="therapy_session">Therapy Session</option>
+                 <option value="mental_health_assessment">Mental Health Assessment</option>
+                 <option value="counseling">Counseling</option>
               </select>
             </div>
 
@@ -1842,7 +1865,7 @@ const handleSendMessage = async () => {
                 <FaCommentDots /> Messages
              </button>
            </li>
-          <li className="logout-button">
+          <li className="logout-butto">
             <button onClick={handleLogout}>
               <FaSignOutAlt /> Logout
             </button>

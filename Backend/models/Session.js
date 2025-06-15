@@ -27,8 +27,17 @@ const SessionSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['individual', 'group', 'emergency'],
-    default: 'individual',
+    enum: [
+      'critical',
+      'followup',
+      'initial_consultation',
+      'routine_check',
+      'crisis_intervention',
+      'therapy_session',
+      'mental_health_assessment',
+      'counseling'
+    ],
+    default: 'routine_check', // You can change this default if needed
     required: true
   },
   status: {

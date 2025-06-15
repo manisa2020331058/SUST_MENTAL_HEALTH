@@ -1216,7 +1216,7 @@ const StudentDashboard = () => {
               <FaClipboardList /> Seminars
             </button>
           </li>
-          <li className="logout-button">
+          <li className="logout-butto">
             <button onClick={handleLogout}>
               <FaSignOutAlt /> Logout
             </button>
