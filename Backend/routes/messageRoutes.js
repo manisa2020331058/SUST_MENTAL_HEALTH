@@ -1,58 +1,71 @@
 const express = require('express');
 const router = express.Router();
-const { protect, psychologistOnly } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 const Message = require('../models/Message');
 
-// Get messages between two users
-router.get('/:recipientId', protect, async (req, res) => {
+// send a message
+router.post('/', protect, async (req, res) => {
   try {
-    const messages = await Message.find({
+    const { recipient, content } = req.body;
+    if (!recipient || !content) {
+      return res.status(400).json({ message: 'recipient + content required' });
+    }
+    const message = await Message.create({
+      sender:    req.user._id,
+      recipient,
+      content,
+      timestamp: Date.now()
+    });
+    res.status(201).json(message);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// get conversation with one user
+router.get('/:otherId', protect, async (req, res) => {
+  try {
+    const me = req.user._id.toString();
+    const them = req.params.otherId;
+    const msgs = await Message.find({
       $or: [
-        { sender: req.user._id, recipient: req.params.recipientId },
-        { sender: req.params.recipientId, recipient: req.user._id }
+        { sender: me, recipient: them },
+        { sender: them, recipient: me }
       ]
     }).sort({ timestamp: 1 });
-    
-    res.json(messages);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.json(msgs);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
-// Mark messages as read
-router.put('/read/:senderId', protect, async (req, res) => {
+// mark as read
+router.put('/read/:fromId', protect, async (req, res) => {
   try {
     await Message.updateMany(
-      { sender: req.params.senderId, recipient: req.user._id, read: false },
+      { sender: req.params.fromId, recipient: req.user._id, read: false },
       { read: true }
     );
-    res.json({ message: 'Messages marked as read' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.json({ message: 'marked read' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
-router.get('/psychologist/messages', protect, async (req, res) => {
-    try {
-      // Get the current user's ID (psychologist)
-      const psychologistId = req.user._id;
-  
-      // Find all messages where the psychologist is either sender or recipient
-      const messages = await Message.find({
-        $or: [
-          { sender: psychologistId },
-          { recipient: psychologistId }
-        ]
-      })
-      .sort({ createdAt: 1 })
-      .populate('sender', 'name email')
-      .populate('recipient', 'name email');
-      console.log('Found messages:', messages);
-      
-      res.json(messages);
-    } catch (error) {
-      console.error('Error fetching psychologist messages:', error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-  module.exports = router;
+// psychologist: get *all* messages so we can group by student
+router.get('/psychologist/all', protect, async (req, res) => {
+  try {
+    const psychId = req.user._id;
+    const msgs = await Message.find({
+      $or: [{ sender: psychId }, { recipient: psychId }]
+    })
+      .sort({ timestamp: 1 })
+      .populate('sender', 'name')
+      .populate('recipient', 'name');
+    res.json(msgs);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+module.exports = router;
