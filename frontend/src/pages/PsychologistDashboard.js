@@ -16,7 +16,7 @@ import {
   FaAngleDown,
   FaAngleUp,
   FaHistory,
-  FaNotesMedical
+  FaNotesMedical    // Search
 } from 'react-icons/fa';
 import '../styles/PsychologistDashboard.css';
 import api from '../utils/api';
@@ -28,6 +28,7 @@ import { useChat } from '../contexts/ChatContext';
 import { useNavigate } from 'react-router-dom';
 import PsychologistOverview from './PsychologistOverview';
 import PsychologyStudentEnrollment from './PsychologyStudentEnrollment';
+import '../styles/chat.css';
 
 const defaultProfile = {
   personalInfo: {
@@ -96,9 +97,15 @@ const [showModal, setShowModal] = useState(false);
    // New state for editing profile
    const [editedProfile, setEditedProfile] = useState(defaultProfile);
    const [isEditing, setIsEditing] = useState(false);
-
+   const [drafts, setDrafts] = useState({}); 
+   const [chatSearch, setChatSearch] = useState('')
   
      // Add this useEffect for socket connection
+
+     // after you load your profile from api.profile.get():
+const [meId, setMeId] = useState(null);
+
+
 useEffect(() => {
   if (socket) {
     socket.on('message', (newMessage) => {
@@ -117,7 +124,42 @@ useEffect(() => {
 }, [socket]);
 
 
+const handleDraftChange = e => {
+  setDrafts(d => ({ 
+    ...d,
+    [activeChat.userId]: e.target.value 
+  }));
+};
 
+useEffect(() => {
+  if (!activeChat) return;
+
+  api.messages.getMessages(activeChat.userId)
+    .then(res => {
+      setMessages(m => ({ 
+        ...m, 
+        [activeChat.userId]: res.data 
+      }));
+    })
+    .catch(err => {
+      console.error('Fetch chat failed', err);
+      toast.error('Could not load conversation');
+    });
+}, [activeChat]);
+
+useEffect(() => {
+  if (!activeChat) return;
+  const sid = activeChat.userId;
+
+  // 1) call server
+  api.messages.markAsRead(sid).catch(console.error);
+
+  // 2) update local state
+  setMessages(prev => ({
+    ...prev,
+    [sid]: (prev[sid]||[]).map(m => ({ ...m, read: true }))
+  }));
+}, [activeChat]);
    // Utility function to handle input changes
    const handleInputChange = useCallback((section, field, value) => {
      setEditedProfile(prevProfile => ({
@@ -159,7 +201,7 @@ useEffect(() => {
 
   
 
-
+  
    
    const fetchEnrolledStudents = useCallback(async () => {
     try {
@@ -501,7 +543,8 @@ useEffect(() => {
       }
   
       const data = response.data;
-      
+
+           setMeId(data.userId);   
       // Sanitize and structure the profile data
       const sanitizedProfile = {
         personalInfo: {
@@ -762,40 +805,39 @@ useEffect(() => {
       setLoading(false)
     }
   }
-
-// Add message sending function
 const handleSendMessage = async () => {
-  if (!newMessage.trim() || !activeChat) return;
+  if (!activeChat) return;
+  const text = (drafts[activeChat.userId] || '').trim();
+  if (!text) return;   // nothing to send
 
   try {
-    socketSendMessage(activeChat.user, newMessage.trim());
-    
-    // Optionally, add the message to the local state immediately
-    const newMessageObj = {
-      _id: Date.now(), // temporary ID
-      content: newMessage.trim(),
-      sender: {
-        _id: profile.user._id
-      },
-      recipient: {
-        _id: activeChat.user
-      },
-      timestamp: new Date(),
-      read: false
-    };
+    setLoading(true);
 
-    setMessages(prev => ({
-      ...prev,
-      [activeChat.user]: [...(prev[activeChat.user] || []), newMessageObj]
+    // 1) Persist
+    const payload = { recipient: activeChat.userId, content: text };
+    const res = await api.messages.sendMessage(payload);
+
+    // 2) Optimistic UI
+    setMessages(msgs => ({
+      ...msgs,
+      [activeChat.userId]: [
+        ...(msgs[activeChat.userId] || []),
+        res.data
+      ]
     }));
 
-    setNewMessage('');
-  } catch (error) {
-    console.error('Error sending message:', error);
+    // 3) Optional socket
+    socketSendMessage(res.data);
+
+    // 4) Clear draft for this chat
+    setDrafts(d => ({ ...d, [activeChat.userId]: '' }));
+  } catch (err) {
+    console.error(err);
     toast.error('Failed to send message');
+  } finally {
+    setLoading(false);
   }
 };
-
   const renderOverview = PsychologistOverview;
 
 
@@ -1657,15 +1699,36 @@ const handleSendMessage = async () => {
   )
 }
   
-  const renderMessages = () => (
+ const renderMessages = () => {
+  const filteredStudents = students.filter(s =>
+    s.personalInfo.name.toLowerCase().includes(chatSearch.toLowerCase())
+  );
+
+  return (
     <div className="messages-section">
+      {/* LEFT: Student List */}
       <div className="students-list">
         <h3>Student Conversations</h3>
-        {students.map(student => {
-          const unreadCount = messages[student.userId]?.filter(
-            m => !m.read && m.sender === student.userId
+
+        {/* ✅ Search Box inserted carefully */}
+        <div className="chat-search">
+          <FaSearch className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search students..."
+            value={chatSearch}
+            onChange={e => setChatSearch(e.target.value)}
+            className="search-input"
+          />
+        </div>
+
+        {/* ✅ Map filtered students only */}
+        {filteredStudents.map(student => {
+          const thread = messages[student.userId] || [];
+          const unreadCount = thread.filter(
+            m => !m.read && String(m.sender._id || m.sender) === String(student.userId)
           ).length;
-  
+
           return (
             <div
               key={student.userId}
@@ -1676,43 +1739,55 @@ const handleSendMessage = async () => {
                 <h4>{student.personalInfo.name}</h4>
                 <p>{student.academicInfo.department}</p>
               </div>
-              {unreadCount > 0 && (
-                <span className="unread-badge">{unreadCount}</span>
-              )}
+              {unreadCount > 0 && <span className="unread-badge">{unreadCount}</span>}
             </div>
           );
         })}
       </div>
-  
+
+      {/* RIGHT: Chat Area */}
       <div className="chat-area">
-        {activeChat ? (
+        {!activeChat ? (
+          <div className="no-chat-selected">Select a student to start chatting</div>
+        ) : (
           <>
             <div className="chat-header">
               <h3>{activeChat.personalInfo.name}</h3>
-              <p>{activeChat.academicInfo.department} - {activeChat.academicInfo.registrationNumber}</p>
+              <p>
+                {activeChat.academicInfo.department} -{' '}
+                {activeChat.academicInfo.registrationNumber}
+              </p>
             </div>
-  
+
             <div className="chat-messages">
-              {messages[activeChat.userId]?.map((message, index) => (
-                <div
-                  key={message._id || index}
-                  className={`message ${message.sender === profile.userId ? 'sent' : 'received'}`}
-                >
-                  <div className="message-content">{message.content}</div>
-                  <div className="message-time">
-                    {new Date(message.timestamp).toLocaleTimeString()}
+              {(messages[activeChat.userId] || []).map(msg => {
+                const senderId = msg.sender._id ? msg.sender._id : msg.sender;
+                const fromMe = String(senderId) === String(meId);
+
+                return (
+                  <div
+                    key={msg._id}
+                    className={`message ${fromMe ? 'sent' : 'received'}`}
+                  >
+                    <div className="message-header">
+                      {fromMe ? 'You' : activeChat.personalInfo.name}
+                    </div>
+                    <div className="message-content">{msg.content}</div>
+                    <div className="message-time">
+                      {new Date(msg.timestamp).toLocaleTimeString()}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
-  
+
             <div className="chat-input">
               <textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
-                onKeyPress={(e) => {
+                value={drafts[activeChat.userId] || ''}
+                onChange={handleDraftChange}
+                placeholder="Type your message…"
+                onKeyDown={e => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     handleSendMessage();
@@ -1721,22 +1796,17 @@ const handleSendMessage = async () => {
               />
               <button
                 onClick={handleSendMessage}
-                disabled={!newMessage.trim()}
+                disabled={!(drafts[activeChat.userId] || '').trim()}
               >
                 Send
               </button>
             </div>
           </>
-        ) : (
-          <div className="no-chat-selected">
-            Select a student to start chatting
-          </div>
         )}
       </div>
     </div>
   );
-  
-  
+};
 
   const renderSidebar = () => (
     <nav className="dashboard-nav">

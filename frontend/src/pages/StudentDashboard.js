@@ -164,7 +164,9 @@ const StudentDashboard = () => {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const messagesEndRef = useRef(null)
   const { socket, messages: chatMessages, sendMessage: socketSendMessage } = useChat()
-
+  const [sending, setSending]  = useState(false)
+  const [open, setOpen]           = useState(false)
+   const endRef                    = useRef(null)
   // New state for resources and seminars
   const [psychologists, setPsychologists] = useState([])
   const [seminars, setSeminars] = useState([])
@@ -184,9 +186,9 @@ const StudentDashboard = () => {
 
   const [quote, setQuote] = useState("")
   const [quoteLoading, setQuoteLoading] = useState(true)
-
   const chatEndRef = useRef(null)
-
+  const [profile, setProfile] = useState(null);
+  const psychId = dashboardData.createdBy?.userId
   // Game options for Playzone
   const gameOptions = [
     {
@@ -212,11 +214,21 @@ const StudentDashboard = () => {
     },
   ]
 
+// At the top of your component:
+
+useEffect(() => {
+  if (!psychId) return;
+  api.messages.getMessagesWithStudent(psychId)
+    .then(res => setMessages(res.data))
+    .catch(err => {
+      console.error("Could not load chat", err);
+      toast.error("Could not load chat");
+    });
+}, [psychId]);
+  // 3) Auto-scroll to bottom
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollTop = chatEndRef.current.scrollHeight
-    }
-  }, [aiChatHistory])
+    endRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   const sendAiMessage = async () => {
     if (!aiInputMessage.trim()) return
@@ -252,6 +264,23 @@ const StudentDashboard = () => {
     }
   }
 
+   // inside StudentDashboard()
+const markAllRead = () => {
+  if (!psychId) return;
+  api.messages.markAsRead(psychId)
+    .catch(console.error)
+    .then(() => {
+      setMessages(msgs => msgs.map(m => ({ ...m, read: true })));
+    });
+};
+
+const handleToggleChat = () => {
+  setIsChatOpen(open => {
+    const next = !open;
+    if (next) markAllRead();
+    return next;
+  });
+};
   // Add useEffect to fetch articles and podcasts
   useEffect(() => {
     const fetchArticlesAndPodcasts = async () => {
@@ -433,21 +462,8 @@ const StudentDashboard = () => {
     }
   }, [socket])
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (dashboardData.createdBy) {
-        try {
-          const response = await api.messages.getMessages(dashboardData.createdBy._id)
-          setMessages(response.data)
-          setHasPsychologist(true)
-        } catch (error) {
-          console.error("Error fetching messages:", error)
-        }
-      }
-    }
 
-    fetchMessages()
-  }, [dashboardData.createdBy])
+
 
   useEffect(() => {
     if ("Notification" in window) {
@@ -532,39 +548,29 @@ const StudentDashboard = () => {
     )
   }
 
-  const handleSendMessage = () => {
-    if (!newMessage.trim() || !dashboardData.createdBy) return
+  const handleSendMessage = async () => {
+  console.log('Clicked Send', { psychId, newMessage });
+  const text = newMessage.trim();
+  if (!psychId) return console.warn('no psychId');
+  if (!text   ) return console.warn('empty message');
 
-    try {
-      const recipientId = dashboardData.createdBy.userId
-
-      if (!recipientId) {
-        console.error("No recipient ID found")
-        toast.error("Unable to send message: No recipient found")
-        return
-      }
-
-      socketSendMessage(recipientId, newMessage.trim())
-      setNewMessage("")
-    } catch (error) {
-      console.error("Message Send Error:", error)
-      toast.error("Failed to send message")
-    }
+  try {
+    setSending(true);
+    const res = await api.messages.sendMessage({
+      recipient: psychId,
+      content:   text
+    });
+    console.log('POST /messages ⇒', res.data);
+    setMessages(ms => [...ms, res.data]);
+    socketSendMessage(res.data);
+    setNewMessage('');
+  } catch (err) {
+    console.error('Send failed:', err.response || err);
+    toast.error('Failed to send message');
+  } finally {
+    setSending(false);
   }
-
-  const handleOpenChat = async () => {
-    setIsChatOpen(true)
-    if (dashboardData.createdBy) {
-      try {
-        await api.messages.markAsRead(dashboardData.createdBy._id)
-        const response = await api.messages.getMessages(dashboardData.createdBy._id)
-        setMessages(response.data)
-      } catch (error) {
-        console.error("Error marking messages as read:", error)
-      }
-    }
-  }
-
+};
   // Update the renderDashboard function to consolidate student information into one box
   const renderDashboard = () => (
     <div className="dashboard-main-content">
@@ -678,57 +684,72 @@ const StudentDashboard = () => {
       </div>
 
       {/* Rest of the dashboard content remains the same */}
-      {/* Chat Widget */}
-      {dashboardData.createdBy && (
-        <div className="chat-widget">
-          <div className="chat-trigger" onClick={() => setIsChatOpen(!isChatOpen)}>
-            <FaCommentDots />
-            {!isChatOpen && messages.filter((m) => !m.read).length > 0 && (
-              <span className="chat-notification-badge">{messages.filter((m) => !m.read).length}</span>
-            )}
-          </div>
+     {/* Chat Widget */}
+{dashboardData.createdBy && (
+  <div className="chat-widget">
+    {/* Trigger */}
+    <div className="chat-trigger" onClick={handleToggleChat}>
+      <FaCommentDots />
+      {!isChatOpen &&
+        messages.filter((m) => !m.read && m.sender !== dashboardData.studentProfile.userId).length > 0 && (
+          <span className="chat-notification-badge">
+            {messages.filter((m) => !m.read && m.sender !== dashboardData.studentProfile.userId).length}
+          </span>
+        )}
+    </div>
 
-          {isChatOpen && (
-            <div className="chat-modal">
-              <div className="chat-header">
-                <h3>Chat with {dashboardData.createdBy?.name || "Psychologist"}</h3>
-                <button className="close-chat" onClick={() => setIsChatOpen(false)}>
-                  <FaTimes />
-                </button>
-              </div>
-
-              <div className="chat-messages">
-                {messages.map((msg, index) => (
-                  <div
-                    key={msg._id || index}
-                    className={`message ${msg.sender === dashboardData.studentProfile.userId ? "sent" : "received"}`}
-                  >
-                    <div className="message-content">{msg.content}</div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-
-              <div className="chat-input">
-                <textarea
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault()
-                      handleSendMessage()
-                    }
-                  }}
-                />
-                <button onClick={handleSendMessage} disabled={!newMessage.trim()}>
-                  <FaPaperPlane />
-                </button>
-              </div>
-            </div>
-          )}
+    {/* Modal */}
+    {isChatOpen && (
+      <div className="chat-modal">
+        {/* Header */}
+        <div className="chat-header">
+          <h3>Chat with {dashboardData.createdBy?.name || "Psychologist"}</h3>
+          <button className="close-chat" onClick={() => setIsChatOpen(false)}>
+            <FaTimes />
+          </button>
         </div>
-      )}
+
+        {/* Messages */}
+        <div className="chat-messages">
+          {messages.map((msg) => {
+            const fromMe = msg.sender.toString() === dashboardData.studentProfile.userId
+            return (
+              <div key={msg._id} className={`message ${fromMe ? 'sent' : 'received'}`}>
+                <div className="message-header">{fromMe ? 'You' : dashboardData.createdBy.name}</div>
+                <div className="message-content">{msg.content}</div>
+                <div className="message-time">
+                  {new Date(msg.timestamp).toLocaleTimeString()}
+                </div>
+              </div>
+            )
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <div className="chat-input">
+          <textarea
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Type your message…"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                handleSendMessage()
+              }
+            }}
+          />
+          <button onClick={handleSendMessage} disabled={sending || !newMessage.trim()}>
+            
+            <FaPaperPlane />
+          </button>
+          
+        </div>
+      </div>
+    )}
+  </div>
+)}
+
 
       {/* Psychologist Section */}
       <div className="dashboard-section psychologist-section">
@@ -1173,4 +1194,4 @@ const StudentDashboard = () => {
   )
 }
 
-export default StudentDashboard
+export default StudentDashboard;

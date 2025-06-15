@@ -125,19 +125,25 @@ const admin = {
 
 
 const messages = {
-  // Get all messages for a psychologist with their enrolled students
-  getAllMessages: () => api.get('/messages/psychologist/messages'),
-  
-  getMessagesWithStudent: (studentId) => api.get(`/messages/${studentId}`),
-  // Get messages between current user and a specific recipient
-  getMessages: (recipientId) => api.get(`/messages/${recipientId}`),
-  
-  // Send a new message
-  sendMessage: (data) => api.post('/messages', data),
-  
-  // Mark messages as read
-  markAsRead: (senderId) => api.put(`/messages/read/${senderId}`)
-};
+  // now points at GET /messages/psychologist/all
+  getAllMessages: () => api.get('/messages/psychologist/all'),
+
+  // GET /messages/:studentId
+  getMessagesWithStudent: (studentId) =>
+    api.get(`/messages/${studentId}`),
+
+  // alias for above (if you like):
+  getMessages: (recipientId) =>
+    api.get(`/messages/${recipientId}`),
+
+  // POST /messages
+  sendMessage: (data) =>
+    api.post('/messages', data),
+
+  // PUT /messages/read/:senderId
+  markAsRead: (senderId) =>
+    api.put(`/messages/read/${senderId}`)
+}
 // Export all API functions
 export default {
   ...api,
