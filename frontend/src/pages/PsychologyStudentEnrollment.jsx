@@ -366,7 +366,7 @@ const PsychologyEnrollmentForm = () => {
           >
             <option value="">Select Department</option>
             <option value="Computer Science">Computer Science and Engineering</option>
-            <option value="Engineering">Electrical and Electronics Engineering</option>
+            <option value="Electrical and Electronics Engineering">Electrical and Electronics Engineering</option>
             <option value="Business Administration">Business Administration</option>
             <option value="Social Sciences">Social Sciences</option>
           </select>

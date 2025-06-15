@@ -20,6 +20,7 @@ import {
   FaCube,
   FaPuzzlePiece,
   FaSignOutAlt,
+  FaKey,
 } from "react-icons/fa"
 import api from "../utils/api"
 import "../styles/studentDashboard.css"
@@ -178,6 +179,9 @@ const StudentDashboard = () => {
   const messagesEndRef = useRef(null)
   const { socket, messages: chatMessages, sendMessage: socketSendMessage } = useChat()
 
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   // New state for resources and seminars
   const [psychologists, setPsychologists] = useState([])
   const [seminars, setSeminars] = useState([])
@@ -197,6 +201,10 @@ const StudentDashboard = () => {
 
   const [quote, setQuote] = useState("")
   const [quoteLoading, setQuoteLoading] = useState(true)
+
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [message, setMessage] = useState("")
 
 
   const chatEndRef = useRef(null)
@@ -1157,6 +1165,89 @@ const StudentDashboard = () => {
     </div>
   )
 
+  const handlePasswordReset = async () => {
+    if (newPassword !== confirmPassword) {
+      setMessage("❌ Passwords do not match.")
+      return
+    }
+
+    try {
+
+      const response = await fetch("http://localhost:5000/api/reset-password/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: userId,
+          newPassword: newPassword
+        }),
+      });
+      
+
+      if (response.ok) {
+        setMessage("✅ Password updated successfully.")
+      } else {
+        const data = await response.json()
+        setMessage("❌ " + (data.message || "Failed to update password."))
+      }
+    } catch (error) {
+      setMessage("❌ Error: " + error.message)
+    }
+  }
+
+
+  // ResetPasswordComponent.jsx
+
+  const renderResetPassword = () => (
+    <div className="reset-password-container">
+      <h2>🔐 Reset Your Password</h2>
+
+      <div className="form-group">
+        <label>New Password:</label>
+        <div className="password-input">
+          <input
+            type={showNewPassword ? "text" : "password"}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Enter new password"
+          />
+          <button
+            type="button"
+            className="toggle-btn"
+            onClick={() => setShowNewPassword((prev) => !prev)}
+          >
+            {showNewPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label>Confirm Password:</label>
+        <div className="password-input">
+          <input
+            type={showConfirmPassword ? "text" : "password"}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Re-enter new password"
+          />
+          <button
+            type="button"
+            className="toggle-btn"
+            onClick={() => setShowConfirmPassword((prev) => !prev)}
+          >
+            {showConfirmPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
+      </div>
+
+      <button className="submit-btn" onClick={handlePasswordReset}>
+        🔄 Update Password
+      </button>
+
+      {message && <p className={`message ${message.startsWith("✅") ? "success" : "error"}`}>{message}</p>}
+    </div>
+  );
+
+
   const renderContent = () => {
     switch (activeSection) {
       case "dashboard":
@@ -1167,6 +1258,8 @@ const StudentDashboard = () => {
         return renderResources()
       case "seminars":
         return renderSeminars()
+      case "resetPassword":
+        return renderResetPassword()
       default:
         return renderDashboard()
     }
@@ -1214,6 +1307,11 @@ const StudentDashboard = () => {
           <li className={activeSection === "seminars" ? "active" : ""}>
             <button onClick={() => setActiveSection("seminars")}>
               <FaClipboardList /> Seminars
+            </button>
+          </li>
+          <li className={activeSection === "resetPassword" ? "active" : ""}>
+            <button onClick={() => setActiveSection("resetPassword")}>
+              <FaKey /> Reset Password
             </button>
           </li>
           <li className="logout-butto">

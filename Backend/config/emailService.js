@@ -366,8 +366,198 @@ SUST Psychology Department
   }
 }
 
+const sendWelcomeEmailToStudent = async ({ recipientEmail, recipientName, password, registrationNumber }) => {
+  try {
+    console.log(`📧 Sending welcome email to student ${recipientEmail}`)
+
+    const transporter = createTransporter()
+    await transporter.verify()
+
+    const subject = "Welcome to SUST Mental Health Portal - Your Student Account Details"
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Welcome Student</title>
+      <style>
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background-color: #f4f4f4;
+          padding: 20px;
+          color: #333;
+        }
+        .container {
+          background: #fff;
+          border-radius: 10px;
+          padding: 30px;
+          max-width: 600px;
+          margin: auto;
+          box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+          text-align: center;
+          border-bottom: 3px solid #87ceeb;
+          margin-bottom: 30px;
+        }
+        .logo {
+          font-size: 26px;
+          font-weight: bold;
+          color: #2f4f4f;
+        }
+        .message {
+          background: linear-gradient(135deg, #87ceeb, #9caf88);
+          color: white;
+          padding: 20px;
+          border-radius: 8px;
+          text-align: center;
+          margin: 20px 0;
+        }
+        .credentials-box {
+          background-color: #f8f9fa;
+          padding: 20px;
+          border-radius: 8px;
+          border: 2px solid #87ceeb;
+          margin: 20px 0;
+        }
+        .credential {
+          display: flex;
+          justify-content: space-between;
+          margin: 10px 0;
+          padding: 10px;
+          background: #fff;
+          border-left: 4px solid #5f9ea0;
+          border-radius: 5px;
+        }
+        .label {
+          font-weight: bold;
+        }
+        .value {
+          font-family: monospace;
+        }
+        .notice {
+          background: #fff3cd;
+          padding: 15px;
+          margin: 20px 0;
+          border-left: 4px solid #ffeeba;
+          border-radius: 5px;
+        }
+        .footer {
+          font-size: 14px;
+          color: #666;
+          text-align: center;
+          border-top: 1px solid #ddd;
+          padding-top: 20px;
+          margin-top: 30px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">🎓 SUST Mental Health Portal</div>
+        </div>
+
+        <div class="message">
+          <h2>Welcome, ${recipientName}!</h2>
+          <p>We’re glad to have you as part of the SUST mental wellness journey.</p>
+        </div>
+
+        <p>Dear ${recipientName},</p>
+        <p>Your student account has been created in the SUST Psychology Department's Mental Health Portal.</p>
+        <p>Here are your login details:</p>
+
+        <div class="credentials-box">
+          <div class="credential">
+            <span class="label">Email:</span>
+            <span class="value">${recipientEmail}</span>
+          </div>
+          <div class="credential">
+            <span class="label">Password:</span>
+            <span class="value">${password}</span>
+          </div>
+          <div class="credential">
+            <span class="label">Registration No:</span>
+            <span class="value">${registrationNumber}</span>
+          </div>
+          <div class="credential">
+            <span class="label">Role:</span>
+            <span class="value">Student</span>
+          </div>
+        </div>
+
+        <div class="notice">
+          <strong>Note:</strong> Please change your password after your first login for security purposes.
+        </div>
+
+        <p>Once logged in, you can:</p>
+        <ul>
+          <li>Explore mental health resources</li>
+          <li>Book appointments with psychologists</li>
+          <li>Attend sessions and track your progress</li>
+          <li>Get motivational quotes tailored to your needs</li>
+        </ul>
+
+        <div class="footer">
+          <p>Need help? Contact us:</p>
+          <p><strong>Support:</strong> support@sust-psychology.edu</p>
+          <p><strong>Admin:</strong> admin@sust-psychology.edu</p>
+          <p>This email was sent automatically. Please do not reply.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `
+
+    const textContent = `
+Welcome ${recipientName} to SUST Mental Health Portal!
+
+Your student account has been created.
+
+LOGIN DETAILS:
+Email: ${recipientEmail}
+Password: ${password}
+Registration No: ${registrationNumber}
+Role: Student
+
+IMPORTANT: Please change your password after logging in for the first time.
+
+You can now:
+- Explore resources
+- Book psychologist appointments
+- Track your mental health progress
+
+Need help?
+Support: support@sust-psychology.edu
+Admin: admin@sust-psychology.edu
+
+This is an automated email. Please do not reply.
+    `
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: recipientEmail,
+      subject: subject,
+      text: textContent,
+      html: htmlContent,
+    }
+
+    console.log("📤 Sending welcome email to student...")
+    const result = await transporter.sendMail(mailOptions)
+    console.log("✅ Student welcome email sent:", result.messageId)
+
+    return { success: true, messageId: result.messageId }
+  } catch (error) {
+    console.error("❌ Error sending student welcome email:", error)
+    throw new Error("Failed to send welcome email to student: " + error.message)
+  }
+}
+
 module.exports = {
   sendBulkEmail,
   sendIndividualEmails,
-  sendWelcomeEmail, // Export the new function
+  sendWelcomeEmail,
+  sendWelcomeEmailToStudent,
 }

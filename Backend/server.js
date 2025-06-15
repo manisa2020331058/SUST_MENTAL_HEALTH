@@ -122,6 +122,7 @@ app.get("/", (req, res) => {
       "/api/seminars",
       "api/users",
       "/api/ai",
+      "api/reset-password",
     ],
   })
 })
@@ -131,6 +132,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 // Routes
 app.use("/api/ai", require("./routes/aiRoutes"))
+app.use("/api/reset-password", require("./routes/resetPasswordRoutes"))
 app.use("/api/admin", require("./routes/adminRoutes"))
 app.use("/api/users", require("./routes/userRoutes"))
 app.use("/api/students", require("./routes/studentRoutes"))

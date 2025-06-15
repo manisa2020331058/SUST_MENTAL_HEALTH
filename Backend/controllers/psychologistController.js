@@ -7,6 +7,36 @@ const User = require('../models/User');
 const { studentProfilePicUpload } = require('../middleware/multerMiddleware');
 const StudentAiChat = require('../models/StudentAiChat');
 
+const { sendBulkEmail, sendIndividualEmails, sendWelcomeEmail ,sendWelcomeEmailToStudent} = require("../config/emailService")
+
+const generateRandomPassword = (length = 8) => {
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+  let password = ""
+
+  // Ensure at least one character from each type
+  const lowercase = "abcdefghijklmnopqrstuvwxyz"  
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  const numbers = "0123456789"
+  const symbols = "!@#$%^&*"
+
+  password += lowercase[Math.floor(Math.random() * lowercase.length)]
+  password += uppercase[Math.floor(Math.random() * uppercase.length)]
+  password += numbers[Math.floor(Math.random() * numbers.length)]
+  password += symbols[Math.floor(Math.random() * symbols.length)]
+
+  // Fill the rest randomly
+  for (let i = 4; i < length; i++) {
+    password += charset[Math.floor(Math.random() * charset.length)]
+  }
+
+  // Shuffle the password
+  return password
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("")
+}
+
+
 // Get Psychologist Profile
 exports.getPsychologistProfile = asyncHandler(async (req, res) => {
   if (!req.user || !req.user._id) {
@@ -302,7 +332,7 @@ exports.getPastSessions = asyncHandler(async (req, res) => {
 // Enroll New Student
 exports.enrollStudent = asyncHandler(async (req, res) => {
   const psychologist = await Psychologist.findOne({ user: req.user._id });
-  
+
   if (!psychologist) {
     res.status(404);
     throw new Error('Psychologist not found');
@@ -322,9 +352,14 @@ exports.enrollStudent = asyncHandler(async (req, res) => {
 
 
   // Create user account for student
+
+  const randomPassword = generateRandomPassword(8)
+  console.log(`Generated password for ${contactInfo.email}: ${randomPassword}`)
+
+
   const user = new User({
     email: contactInfo.email,
-    password: '123456', // Generate random password Math.random().toString(36).slice(-8),
+    password: randomPassword,
     role: 'student',
     status: 'active',
     createdBy: req.user._id, // Psychologist who created the student
@@ -333,7 +368,7 @@ exports.enrollStudent = asyncHandler(async (req, res) => {
   });
   const studentAiChat = new StudentAiChat({
     userId: user._id,
-    summary: 'This is a summary of the student',
+    summary: 'The student name is ' + personalInfo.name + ' Age is ' + personalInfo.age + " His department is " + academicInfo.department,
     chatHistory: []
   });
   await user.save();
@@ -354,6 +389,19 @@ exports.enrollStudent = asyncHandler(async (req, res) => {
   await student.save();
 
   await studentAiChat.save();
+
+  try {
+    await sendWelcomeEmailToStudent({
+      recipientEmail: contactInfo.email,
+      recipientName: personalInfo.name,
+      password: randomPassword,
+      registrationNumber: academicInfo.registrationNumber,
+    })
+    console.log(`Welcome email sent successfully to ${contactInfo.email}`)
+  } catch (emailError) {
+    console.error("Failed to send welcome email:", emailError)
+    // Don't fail the enrollment if email fails, just log it
+  }
 
   res.status(201).json({
     message: 'Student enrolled successfully',

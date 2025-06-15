@@ -18,6 +18,7 @@ import {
   FaHistory,
   FaNotesMedical,
   FaSignOutAlt, 
+  FaKey,
 } from 'react-icons/fa';
 import '../styles/PsychologistDashboard.css';
 import api from '../utils/api';
@@ -554,6 +555,31 @@ useEffect(() => {
       setLoading(false);
     }
   }, []); 
+
+  const PsychologistEmail = profile.contactInfo?.email;
+  const [psychologist, setPsychologist] = useState(null);
+  const [psychologistId, setPsychologistId] = useState(null);
+  const [psychologistIdInPsychologistCollection, setPsychologistIdInPsychologistCollection] = useState(null);
+
+  useEffect(() => {
+      const fetchPsychologistID = async () => {
+          try {
+              if (!PsychologistEmail || PsychologistEmail.trim() === '') {
+                  console.warn('PsychologistEmail is missing, skipping fetch');
+                  return;
+              }
+              const response = await api.psychologists.getByEmail(PsychologistEmail);
+              setPsychologist(response.data);
+              setPsychologistIdInPsychologistCollection(response.data._id);
+              setPsychologistId(response.data.user);
+              //console.log('Fetched Psychologist:', response.data);
+          } catch (error) {
+              console.error('Error fetching psychologist:', error);
+          }
+      };
+
+      fetchPsychologistID();
+  }, [PsychologistEmail]);
  
   const handleCreateSession = async (e) => {
     e.preventDefault();
@@ -1690,7 +1716,94 @@ const handleSendMessage = async () => {
 
     </div>
   )
-}
+  }
+  
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const handlePasswordReset = async () => {
+    if (newPassword !== confirmPassword) {
+      setMessage("❌ Passwords do not match.")
+      return
+    }
+
+    try {
+
+      const response = await fetch("http://localhost:5000/api/reset-password/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: psychologistId,
+          newPassword: newPassword
+        }),
+      });
+
+
+      if (response.ok) {
+        setMessage("✅ Password updated successfully.")
+      } else {
+        const data = await response.json()
+        setMessage("❌ " + (data.message || "Failed to update password."))
+      }
+    } catch (error) {
+      setMessage("❌ Error: " + error.message)
+    }
+  }
+
+
+  const renderResetPassword = () => (
+    <div className="reset-password-container">
+      <h2>🔐 Reset Your Password</h2>
+
+      <div className="form-group">
+        <label>New Password:</label>
+        <div className="password-input">
+          <input
+            type={showNewPassword ? "text" : "password"}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Enter new password"
+          />
+          <button
+            type="button"
+            className="toggle-btn"
+            onClick={() => setShowNewPassword((prev) => !prev)}
+          >
+            {showNewPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label>Confirm Password:</label>
+        <div className="password-input">
+          <input
+            type={showConfirmPassword ? "text" : "password"}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Re-enter new password"
+          />
+          <button
+            type="button"
+            className="toggle-btn"
+            onClick={() => setShowConfirmPassword((prev) => !prev)}
+          >
+            {showConfirmPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
+      </div>
+
+      <button className="submit-btn" onClick={handlePasswordReset}>
+        🔄 Update Password
+      </button>
+
+      {message && <p className={`message ${message.startsWith("✅") ? "success" : "error"}`}>{message}</p>}
+    </div>
+  );
+
   
   const renderMessages = () => (
     <div className="messages-section">
@@ -1864,7 +1977,12 @@ const handleSendMessage = async () => {
             <button onClick={() => setActiveSection('messages')}>
                 <FaCommentDots /> Messages
              </button>
-           </li>
+          </li>
+          <li className={activeSection === "resetPassword" ? "active" : ""}>
+              <button onClick={() => setActiveSection("resetPassword")}>
+                <FaKey /> Reset Password
+              </button>
+            </li>
           <li className="logout-butto">
             <button onClick={handleLogout}>
               <FaSignOutAlt /> Logout
@@ -1898,6 +2016,7 @@ const handleSendMessage = async () => {
             {activeSection === 'students' && <PsychologyStudentEnrollment/>}
             {activeSection === 'seminars' && renderSeminars()}
             {activeSection === 'messages' && renderMessages()}
+            {activeSection === 'resetPassword' && renderResetPassword()}
           </>
         )}
       </main>

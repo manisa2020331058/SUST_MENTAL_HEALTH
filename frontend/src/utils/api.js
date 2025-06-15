@@ -60,15 +60,15 @@ const sessions = {
   cancel: (sessionId, reason) => api.post(`/sessions/${sessionId}/cancel`, { reason }),
   reschedule: (sessionId, data) => api.post(`/sessions/${sessionId}/reschedule`, data),
   // New methods
-  getAvailableSlots: (date, psychologistId) => api.get('/sessions/available-slots', {
-    params: { date, psychologistId }
+  getAvailableSlots: (date, psychologistId) => api.get('/sessions/available-slots', { 
+    params: { date, psychologistId } 
   }),
-  getCalendar: (startDate, endDate) => api.get('/sessions/psychologist/calendar', {
-    params: { startDate, endDate }
+  getCalendar: (startDate, endDate) => api.get('/sessions/psychologist/calendar', { 
+    params: { startDate, endDate } 
   })
 };
 
-const seminars = {
+const seminars ={
   getAll: () => api.get('/seminars/'),
   create: (seminarData) => api.post('/seminars/', seminarData),
   delete: (id) => api.delete(`/seminars/${id}`),
@@ -109,17 +109,17 @@ const admin = {
     // Convert file to base64 if exists
     const processedData = {
       ...enrollmentData,
-      profilePicture: enrollmentData.profilePicture
+      profilePicture: enrollmentData.profilePicture 
         ? {
-          filename: enrollmentData.profilePicture.name,
-          content: enrollmentData.profilePicture ? URL.createObjectURL(enrollmentData.profilePicture) : null
-        }
+            filename: enrollmentData.profilePicture.name,
+            content: enrollmentData.profilePicture ? URL.createObjectURL(enrollmentData.profilePicture) : null
+          }
         : null
     };
-
+  
     return api.post('/admin/psychologists', processedData);
   },
-
+  
   updateAdminPermissions: (adminId, permissions) => api.put('/admin/admin-permissions', { adminId, permissions })
 };
 
@@ -127,14 +127,14 @@ const admin = {
 const messages = {
   // Get all messages for a psychologist with their enrolled students
   getAllMessages: () => api.get('/messages/psychologist/messages'),
-
+  
   getMessagesWithStudent: (studentId) => api.get(`/messages/${studentId}`),
   // Get messages between current user and a specific recipient
   getMessages: (recipientId) => api.get(`/messages/${recipientId}`),
-
+  
   // Send a new message
   sendMessage: (data) => api.post('/messages', data),
-
+  
   // Mark messages as read
   markAsRead: (senderId) => api.put(`/messages/read/${senderId}`)
 };
