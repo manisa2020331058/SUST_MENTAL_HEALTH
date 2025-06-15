@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect ,useCallback} from 'react';
 import { User, Mail, Phone, MapPin, GraduationCap, Calendar, Camera, UserCheck } from 'lucide-react';
 import { 
-  FaUser,        // Student Enrollment
+  FaUser,  
+  FaKey ,     // Student Enrollment
   FaCalendar,    // Therapy Schedule
   FaClipboardList, // Seminars
   FaChartLine,   // Overview
@@ -16,7 +17,8 @@ import {
   FaAngleDown,
   FaAngleUp,
   FaHistory,
-  FaNotesMedical
+  FaNotesMedical,
+  FaSignOutAlt
 } from 'react-icons/fa';
 import '../styles/PsychologistDashboard.css';
 import api from '../utils/api';
@@ -29,6 +31,7 @@ import { useChat } from '../contexts/ChatContext';
 import { useNavigate } from 'react-router-dom';
 import PsychologistOverview from './PsychologistOverview';
 import PsychologyStudentEnrollment from './PsychologyStudentEnrollment';
+import Select from 'react-select';
 
 const defaultProfile = {
   personalInfo: {
@@ -115,6 +118,15 @@ const [showModal, setShowModal] = useState(false);
 
      // after you load your profile from api.profile.get():
 const [meId, setMeId] = useState(null);
+const endRef = useRef(null); // for auto-scrolling to bottom of messages
+
+const [sending, setSending] = useState(false); // sending message state
+const [newPassword, setNewPassword] = useState(''); // password input
+const [confirmPassword, setConfirmPassword] = useState(''); // confirm input
+const [showNewPassword, setShowNewPassword] = useState(false); // toggle new password visibility
+const [showConfirmPassword, setShowConfirmPassword] = useState(false); // toggle confirm visibility
+const [message, setMessage] = useState(''); // success/error messages
+
 
 
 useEffect(() => {
@@ -1757,11 +1769,6 @@ const handleSendMessage = async () => {
   )
   }
   
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [message, setMessage] = useState("");
 
   const handlePasswordReset = async () => {
     if (newPassword !== confirmPassword) {

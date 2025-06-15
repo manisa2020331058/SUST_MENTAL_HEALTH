@@ -1,68 +1,102 @@
-.messages-section { display: flex; height: 100%; font-family: sans-serif; }
-.students-list { width: 30%; border-right: 1px solid #ddd; overflow-y: auto; }
-.student-chat-item { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; }
-.student-chat-item.active { background: #f0f0f0; }
-.badge { background: #25D366; color: white; border-radius: 50%; padding: 2px 8px; font-size: 0.75rem; }
-.chat-area { width: 70%; display: flex; flex-direction: column; }
-.chat-header { padding: 12px; border-bottom: 1px solid #ddd; background: #f5f5f5; }
-.chat-messages { flex: 1; overflow-y: auto; padding: 12px; background: #e5ddd5; }
-.message { margin: 6px 0; position: relative; display: flex; flex-direction: column; max-width: 70%; }
-.message.sent { align-self: flex-end; }
-.message.received { align-self: flex-start; }
-.bubble { padding: 8px 12px; border-radius: 18px; }
-.message.sent .bubble { background: #dcf8c6; }
-.message.received .bubble { background: #fff; }
-.time { font-size: 0.65rem; color: #888; margin-top: 2px; align-self: flex-end; }
-.chat-input { display: flex; padding: 8px; border-top: 1px solid #ddd; background: #f5f5f5; }
-.chat-input textarea { flex: 1; resize: none; padding: 8px; border-radius: 18px; border: 1px solid #ccc; }
-.chat-input button { margin-left: 8px; padding: 0 16px; border: none; background: #128C7E; color: white; border-radius: 18px; cursor: pointer; }
-
-/* Student widget */
-.chat-widget { position: fixed; bottom: 24px; right: 24px; }
-.trigger { background: #25D366; color: white; padding: 12px; border-radius: 24px; cursor: pointer; display: inline-block; }
-.chat-modal { width: 320px; max-height: 480px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
-.header { padding: 12px; background: #075E54; color: white; display: flex; justify-content: space-between; align-items: center; }
-.messages, .input { padding: 12px; }
-.messages { flex: 1; overflow-y: auto; background: #e5ddd5; }
-.input { display: flex; border-top: 1px solid #ddd; }
-.input textarea { flex: 1; border-radius: 18px; border: 1px solid #ccc; padding: 8px; resize: none; }
-.input button { margin-left: 8px; background: #128C7E; color: white; border: none; border-radius: 18px; padding: 0 16px; }
+/* ================================
+   CHAT MESSAGES STYLING
+================================= */
 .chat-messages {
+  padding: 16px;
+  height: 400px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
+
+/* Sent and received messages */
 .message {
   max-width: 60%;
-  margin: 4px 0;
-  padding: 8px;
-  border-radius: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: #f0f0f0;
+  word-wrap: break-word;
+  font-size: 1.2rem; /* Bigger text */
+  line-height: 1.4;
 }
+
 .message.sent {
-  background: #dcf8c6;
+  background-color: #cfe3ff;
   align-self: flex-end;
+  border-top-right-radius: 0;
 }
+
 .message.received {
-  background: #fff;
+  background-color: #e9e9e9;
   align-self: flex-start;
+  border-top-left-radius: 0;
 }
+
+/* Header: Name in small, left-aligned */
 .message-header {
-  font-size: 0.75em;
+  font-size: 0.75rem;
+  font-weight: bold;
   color: #555;
   margin-bottom: 4px;
+  align-self: flex-start;
 }
-.chat-search {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem;
+
+/* Footer: Time in small, right-aligned */
+.message-time {
+  font-size: 0.7rem;
+  color: #777;
+  margin-top: 6px;
+  align-self: flex-end;
+}
+
+/* ================================
+   STUDENT LIST ITEM STYLING
+================================= */
+.student-chat-item {
+  padding: 10px 12px;
+  cursor: pointer;
   border-bottom: 1px solid #ddd;
-  margin-bottom: 0.5rem;
+  background-color: white;
+  transition: background-color 0.2s ease;
 }
-.chat-search .search-icon {
-  margin-right: 0.5rem;
+
+.student-chat-item:hover {
+  background-color: #f5f5f5;
 }
-.chat-search .search-input {
-  flex: 1;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 0.25rem 0.5rem;
+
+/* Highlight selected */
+.student-chat-item.active {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Fix name color blending when selected */
+.student-chat-item.active .student-info h4 {
+  color: #fff; /* Ensure name is visible */
+}
+
+.student-info h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.student-info p {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* Unread message badge */
+.unread-badge {
+  background-color: red;
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 50px;
+  margin-left: auto;
 }
