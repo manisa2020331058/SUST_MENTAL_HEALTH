@@ -255,7 +255,7 @@ const StudentProfile = () => {
                             <div className="profile-avatar overflow-hidden">
                                 {student?.personalInfo?.profileImage ? (
                                     <img
-                                        src={`http://localhost:5000/${student.personalInfo.profileImage}`}
+                                        src={`/${student.personalInfo.profileImage}`}
                                         alt="Student Profile"
                                         className="avatar-image"
                                     />

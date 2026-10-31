@@ -17,7 +17,7 @@ const AdminDashboard = () => {
     localStorage.removeItem("userInfo") // If you store user info separately
 
     // Redirect to the login page
-    window.location.href = "http://localhost:3000/login"
+    window.location.href = "/login"
   }
 
   const [users, setUsers] = useState([])

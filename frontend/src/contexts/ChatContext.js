@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import { jwtDecode } from 'jwt-decode'; // npm install jwt-decode
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
 export const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {

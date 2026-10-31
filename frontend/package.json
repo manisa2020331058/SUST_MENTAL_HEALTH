@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://manisa2020331058.github.io/",
+  "proxy": "http://localhost:5000",
   "dependencies": {
     "@shadcn/ui": "^0.0.4",
     "@testing-library/dom": "^10.4.0",

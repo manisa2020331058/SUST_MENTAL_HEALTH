@@ -67,7 +67,7 @@ const handleLogout = () => {
     localStorage.removeItem("userInfo") // If you store user info separately
 
     // Redirect to the login page
-    window.location.href = "http://localhost:3000/login"
+    window.location.href = "/login"
   }
 
   // UI State
@@ -1778,7 +1778,7 @@ const handleSendMessage = async () => {
 
     try {
 
-      const response = await fetch("http://localhost:5000/api/reset-password/reset", {
+      const response = await fetch("/api/reset-password/reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

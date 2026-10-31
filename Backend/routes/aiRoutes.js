@@ -14,10 +14,13 @@ router.post('/aiChat', async (req, res) => {
         return res.status(400).json({ error: 'userId and message are required' });
     }
     try {
-        const summaryResponse = await axios.get(`http://localhost:5000/api/ai/getSummary/${userId}`);
+        const summaryResponse = await axios.get(`http://localhost:${process.env.PORT || 5000}/api/ai/getSummary/${userId}`);
         const summary = summaryResponse.data.summary || "No summary found.";
 
         const studentAiHistory = await StudentAiChat.findOne({ userId });
+        if (!studentAiHistory) {
+           return res.status(404).json({ error: 'No AI chat record found for this user' });
+           }
         //const summary = studentAiHistory.summary;
         const chatHistory = studentAiHistory.chatHistory;
         const last_10_messages = chatHistory.slice(-10);
@@ -40,7 +43,7 @@ router.post('/aiChat', async (req, res) => {
         const response = await axios.post(
             'https://api.groq.com/openai/v1/chat/completions',
             {
-                model: 'llama3-70b-8192', 
+                model: 'llama-3.3-70b-versatile', 
                 messages: contextMessages,
             },
             {
@@ -129,7 +132,7 @@ router.post('/update-summary/:userId', async (req, res) => {
         const response = await axios.post(
             'https://api.groq.com/openai/v1/chat/completions',
             {
-                model: 'llama3-70b-8192',
+                model: 'llama-3.3-70b-versatile',
                 messages: [
                     { role: 'system', content: 'You are an empathetic summarizer for mental health conversations.' },
                     { role: 'user', content: prompt },
@@ -175,7 +178,7 @@ router.get('/getQuote/:userId', async (req, res) => {
         const response = await axios.post(
             'https://api.groq.com/openai/v1/chat/completions',
             {
-                model: 'llama3-70b-8192',
+                model: 'llama-3.3-70b-versatile',
                 messages: [
                     { role: 'system', content: 'You are a positive and motivational quote generator for mental health users.' },
                     { role: 'user', content: prompt },

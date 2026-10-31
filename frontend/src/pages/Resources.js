@@ -23,7 +23,7 @@ const Resources = () => {
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/ai/getArticles'); 
+        const response = await fetch('/api/ai/getArticles'); 
         const data = await response.json();
         setResources(data);
       } catch (error) {
@@ -37,7 +37,7 @@ const Resources = () => {
   useEffect(() => {
     const fetchPodcasts = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/ai/podcasts');
+        const response = await fetch('/api/ai/podcasts');
         const data = await response.json();
         setPodcasts(data);
       } catch (error) {

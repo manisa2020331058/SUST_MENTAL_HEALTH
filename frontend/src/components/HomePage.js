@@ -58,7 +58,7 @@ const SeminarCard = ({ title, date, time, speaker, location, description }) => {
 
 const PsychologistCard = ({ name, specialization, image }) => {
   const fullImageUrl = image
-    ? `http://localhost:5000/${image}`
+    ? `/${image}`
     : '../image/default-avatar.png';
 
   return (

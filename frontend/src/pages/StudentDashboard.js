@@ -78,7 +78,7 @@ const SeminarCard = ({ title, date, time, speaker, location, description }) => {
 }
 
 const PsychologistCard = ({ name, specialization, image }) => {
-  const fullImageUrl = image ? `http://localhost:5000/${image}` : "../image/default-avatar.png"
+  const fullImageUrl = image ? `/${image}` : "../image/default-avatar.png"
 
   return (
     <div className="psychologist-card">
@@ -144,7 +144,7 @@ const StudentDashboard = () => {
     localStorage.removeItem("userInfo") // If you store user info separately
 
     // Redirect to the login page
-    window.location.href = "http://localhost:3000/login"
+    window.location.href = "/login"
   }
 
 
@@ -173,6 +173,14 @@ const StudentDashboard = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [hasPsychologist, setHasPsychologist] = useState(false)
+  const endRef = useRef(null);
+  const [sending, setSending] = useState(false);
+
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState("")
   const [isChatOpen, setIsChatOpen] = useState(false)
@@ -251,7 +259,7 @@ useEffect(() => {
     setAiInputMessage("")
 
     try {
-      const response = await fetch("http://localhost:5000/api/ai/aiChat", {
+      const response = await fetch("/api/ai/aiChat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, message: userText }),
@@ -266,7 +274,7 @@ useEffect(() => {
       }
 
       // Here call the update-summery api
-      await fetch(`http://localhost:5000/api/ai/update-summary/${userId}`, {
+      await fetch(`/api/ai/update-summary/${userId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ latestMessage: userText }),
@@ -302,12 +310,12 @@ const handleToggleChat = () => {
           setLoading(true)
 
           // Fetch articles
-          const articlesResponse = await fetch("http://localhost:5000/api/ai/getArticles")
+          const articlesResponse = await fetch("/api/ai/getArticles")
           const articlesData = await articlesResponse.json()
           setArticles(articlesData)
 
           // Fetch podcasts
-          const podcastsResponse = await fetch("http://localhost:5000/api/ai/podcasts")
+          const podcastsResponse = await fetch("/api/ai/podcasts")
           const podcastsData = await podcastsResponse.json()
           setPodcasts(podcastsData)
 
@@ -394,7 +402,7 @@ const handleToggleChat = () => {
 
         if (dashboardResponse.data.studentProfile.personalInfo.profileImage) {
           const profileImage = dashboardResponse.data.studentProfile.personalInfo.profileImage
-          dashboardResponse.data.studentProfile.personalInfo.profileImage = `http://localhost:5000/${profileImage.replace(/^\/+/, "")}`
+          dashboardResponse.data.studentProfile.personalInfo.profileImage = `/${profileImage.replace(/^\/+/, "")}`
         }
         setDashboardData(dashboardResponse.data)
         setIsLoading(false)
@@ -414,7 +422,7 @@ const handleToggleChat = () => {
   useEffect(() => {
     const fetchQuote = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/ai/getQuote/${userId}`)
+        const res = await fetch(`/api/ai/getQuote/${userId}`)
         const data = await res.json()
         setQuote(data.quote)
         console.log("Fetched Quote:", data.quote)
@@ -1166,7 +1174,7 @@ const handleToggleChat = () => {
 
     try {
 
-      const response = await fetch("http://localhost:5000/api/reset-password/reset", {
+      const response = await fetch("/api/reset-password/reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
