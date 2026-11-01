@@ -8,7 +8,7 @@ mongoose.connect(process.env.MONGO_URI);
 
 const seedAdmin = async () => {
   try {
-    const hashedPassword = await bcrypt.hash('123456', 10);
+    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
     
     const admin = await User.create({
       name: 'Super Admin',
@@ -16,7 +16,7 @@ const seedAdmin = async () => {
       password: hashedPassword,
       role: 'admin'
     });
-
+    
     console.log('Admin user created:', admin);
     process.exit();
   } catch (error) {
