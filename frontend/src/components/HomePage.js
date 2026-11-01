@@ -203,7 +203,7 @@ const HomePage = () => {
       this page can't diagnose anything. If they last more than a couple of weeks
       or get in the way of your studies and daily life, please talk to a
       counselor. If you are ever in immediate danger or thinking about harming
-      yourself, contact your local emergency number or go to the nearest hospital
+      yourself, contact National Emergency Helpline at 999 or go to the nearest hospital
       right away.
     </p>
 

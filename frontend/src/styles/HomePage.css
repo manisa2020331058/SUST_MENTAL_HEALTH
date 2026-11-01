@@ -107,20 +107,20 @@ body {
 
 .hero-cta-button {
   display: inline-block;
-  background-color: #b2de4a;
-  color: white;
+  background-color: #e9bf35;
+  color: rgb(255, 255, 255);
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   text-decoration: none;
   font-weight: bold;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+  box-shadow: 0 4px 15px rgba(63, 54, 14, 0.3);
 }
 
 .hero-cta-button:hover {
-  background-color: #f7e654;
+  background-color: #ccbf09;
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+  box-shadow: 0 6px 20px rgba(31, 27, 6, 0.4);
 }
 
 @keyframes float-left {
