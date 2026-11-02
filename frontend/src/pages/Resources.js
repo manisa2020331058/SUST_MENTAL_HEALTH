@@ -1,138 +1,152 @@
 // src/pages/Resources.js
-import React, { useState, useEffect } from 'react';
-import { 
-  FaBook, 
-  FaVideo, 
-  FaPodcast, 
-  FaFilePdf, 
-  FaSearch,
-  FaFilter,
-  FaHeartbeat,
-  FaBrain,
-  FaYinYang,
-  FaHandHoldingHeart,
-  FaExternalLinkAlt
-} from 'react-icons/fa';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { FaBook, FaPodcast, FaSearch, FaExternalLinkAlt } from 'react-icons/fa';
 import '../styles/Resources.css';
 
+// RSS summaries can contain HTML tags; show plain text only
+const clean = (text = '') =>
+  String(text)
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const fetchList = async (url) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Request failed (${res.status})`);
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+};
+
 const Resources = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [resources, setResources] = useState([]);
+  const [tab, setTab] = useState('articles');
+  const [search, setSearch] = useState('');
+  const [articles, setArticles] = useState([]);
   const [podcasts, setPodcasts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchResources = async () => {
-      try {
-        const response = await fetch('/api/ai/getArticles'); 
-        const data = await response.json();
-        setResources(data);
-      } catch (error) {
-        console.error('Failed to fetch resources:', error);
-      }
-    };
-
-    fetchResources();
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    const [a, p] = await Promise.allSettled([
+      fetchList('/api/ai/getArticles'),
+      fetchList('/api/ai/podcasts'),
+    ]);
+    if (a.status === 'fulfilled') setArticles(a.value);
+    if (p.status === 'fulfilled') setPodcasts(p.value);
+    if (a.status === 'rejected' && p.status === 'rejected') {
+      setError('We could not load resources right now. Please try again in a moment.');
+    }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
-    const fetchPodcasts = async () => {
-      try {
-        const response = await fetch('/api/ai/podcasts');
-        const data = await response.json();
-        setPodcasts(data);
-      } catch (error) {
-        console.error('Failed to fetch podcasts:', error);
-      }
-    };
+    load();
+  }, [load]);
 
-    fetchPodcasts();
-  }, []);
-  
-  const filteredResources = resources.filter(resource =>
-    resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    resource.summary.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const q = search.trim().toLowerCase();
+  const matches = (item) =>
+    !q || `${item.title || ''} ${clean(item.summary)}`.toLowerCase().includes(q);
 
-
+  const list = (tab === 'articles' ? articles : podcasts).filter(matches);
 
   return (
-    <div className="resources-page">
-      <header className="resources-header">
+    <div className="rs-page">
+      <header className="rs-hero">
         <h1>Mental Health Resources</h1>
-        <p>Empowering you with knowledge and support</p>
-      </header>
+        <p>Articles and podcasts to help you understand, cope and grow.</p>
 
-      <div className="resources-search-container">
-        <div className="search-input-wrapper">
-          <FaSearch className="search-icon" />
+        <div className="rs-search">
+          <FaSearch className="rs-search-icon" />
           <input
             type="text"
             placeholder="Search resources..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search resources"
           />
         </div>
-      </div>
+      </header>
 
-      <div className="resources-grid">
-        {filteredResources.length > 0 ? (
-          filteredResources.map((resource, index) => (
-            <div key={index} className="resource-card">
-              <div className="resource-card-header">
-                <div className="resource-icon"><FaBook /></div>
-                <span className="resource-type">Article</span>
-              </div>
-              <div className="resource-content">
-                <h3>{resource.title}</h3>
-                <p>{resource.summary}</p>
-                <a
-                  href={resource.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="resource-button-link"
-                >
-                  <button className="resource-button">
-                    Start Reading <FaExternalLinkAlt className="external-icon" />
-                  </button>
-                </a>
+      <main className="rs-main">
+        <div className="rs-tabs" role="tablist">
+          <button
+            role="tab"
+            aria-selected={tab === 'articles'}
+            className={`rs-tab ${tab === 'articles' ? 'active' : ''}`}
+            onClick={() => setTab('articles')}
+          >
+            <FaBook /> Articles <span>{articles.length}</span>
+          </button>
+          <button
+            role="tab"
+            aria-selected={tab === 'podcasts'}
+            className={`rs-tab ${tab === 'podcasts' ? 'active' : ''}`}
+            onClick={() => setTab('podcasts')}
+          >
+            <FaPodcast /> Podcasts <span>{podcasts.length}</span>
+          </button>
+        </div>
 
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="no-resources">
-            <p>No resources found matching your search</p>
+        {loading && (
+          <p className="rs-state">
+            Loading resources… the server may take up to a minute to wake up.
+          </p>
+        )}
+
+        {!loading && error && (
+          <div className="rs-state">
+            <p>{error}</p>
+            <button className="rs-retry" onClick={load}>Try again</button>
           </div>
         )}
-      </div>
 
-      {/* Podcast Section */}
-      <section className="featured-resources">
-        <h2>Podcast Episodes</h2>
-        <div className="featured-grid">
-          {podcasts.length > 0 ? (
-            podcasts.map((podcast, index) => (
-              <div key={index} className="featured-card">
-                <FaPodcast className="featured-icon" />
-                <h3>{podcast.title}</h3>
-                <p>{podcast.summary.split('\n')[0]}</p> {/* first paragraph */}
-                {podcast.link ? (
+        {!loading && !error && list.length === 0 && (
+          <p className="rs-state">
+            {q ? 'No resources match your search.' : 'Nothing to show here yet.'}
+          </p>
+        )}
+
+        {!loading && !error && list.length > 0 && (
+          <div className="rs-grid">
+            {list.map((item, i) => (
+              <article key={item.link || i} className="rs-card">
+                <div className="rs-card-top">
+                  <span className="rs-icon">
+                    {tab === 'articles' ? <FaBook /> : <FaPodcast />}
+                  </span>
+                  <span className="rs-tag">
+                    {tab === 'articles' ? 'Article' : 'Podcast'}
+                  </span>
+                </div>
+                <h3>{item.title || 'Untitled'}</h3>
+                <p>{clean(item.summary)}</p>
+                {item.link && (
                   <a
-                    href={podcast.link}
+                    href={item.link}
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="rs-link"
                   >
-                    <button>Listen Now</button>
+                    {tab === 'articles' ? 'Read article' : 'Listen now'}
+                    <FaExternalLinkAlt size={12} />
                   </a>
-                ) : null}
-              </div>
-            ))
-          ) : (
-            <p>No podcast episodes available</p>
-          )}
-        </div>
-      </section>
+                )}
+              </article>
+            ))}
+          </div>
+        )}
+
+        <aside className="rs-note">
+          <strong>Need to talk to someone?</strong>{' '}
+          These resources are for general information and are not a substitute for
+          professional care. <Link to="/login">Log in</Link> to reach a university
+          counselor. If you or someone you know is in immediate danger, contact your
+          local emergency number or go to the nearest hospital.
+        </aside>
+      </main>
     </div>
   );
 };

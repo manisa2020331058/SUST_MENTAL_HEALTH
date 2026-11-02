@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Brain, HeartPulse, Wind, CloudRain, Moon } from 'lucide-react';
+import { Brain, HeartPulse, Wind, CloudRain, Moon,Clock, User, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
@@ -17,47 +17,36 @@ const isUpcoming = (dateString) => {
   return endOfDay >= new Date();
 };
 
-const SeminarCard = ({ title, date, time, speaker, location, description }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
 
-  const formatDate = (dateString) =>
-    new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+const SeminarCard = ({ title, date, time, speaker, location, description }) => {
+  const d = new Date(date);
+  const fullDate = d.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   return (
-    <div
-      className="seminar-card"
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
-    >
-      <div className="seminar-date">
-        <span className="day">{new Date(date).getDate()}</span>
-        <span className="month">
-          {new Date(date).toLocaleString('default', { month: 'short' })}
-        </span>
+    <article className="sm-card">
+      <div className="sm-badge">
+        <span className="sm-day">{d.getDate()}</span>
+        <span className="sm-month">{d.toLocaleString('en-US', { month: 'short' })}</span>
       </div>
-      <div className="seminar-content">
-        <h3>{title}</h3>
-        <div className="seminar-details">
-          <p className="seminar-full-date">{formatDate(date)}</p>
-          <div className="seminar-meta">
-            <p><i className="icon-clock"></i> {time}</p>
-            <p><i className="icon-user"></i> {speaker}</p>
-            <p><i className="icon-location"></i> {location}</p>
-          </div>
-          {isExpanded && (
-            <div className="seminar-description">
-              <p>{description}</p>
-              <button className="register-btn">Register Now</button>
-            </div>
-          )}
-        </div>
+
+      <div className="sm-body">
+        <h3 className="sm-title">{title}</h3>
+        <p className="sm-date">{fullDate}</p>
+
+        <ul className="sm-meta">
+          {time && <li><Clock size={16} /> {time}</li>}
+          {speaker && <li><User size={16} /> {speaker}</li>}
+          {location && <li><MapPin size={16} /> {location}</li>}
+        </ul>
+
+        {description && <p className="sm-desc">{description}</p>}
       </div>
-    </div>
+    </article>
   );
 };
 const concerns = [
@@ -129,18 +118,19 @@ const HomePage = () => {
 
   useEffect(() => {
     const fetchSeminars = async () => {
-      try {
-        const response = await api.get('/seminars');
-        const upcoming = response.data
-          .filter((s) => isUpcoming(s.date))
-          .sort((a, b) => new Date(a.date) - new Date(b.date));
-        setSeminars(upcoming);
-      } catch (error) {
-        console.error("Failed to fetch seminars:", error);
-      }
-    };
-    fetchSeminars();
-  }, []);
+  try {
+    const response = await api.get('/seminars');
+    const data = Array.isArray(response.data) ? response.data : [];
+    const upcoming = data
+      .filter((s) => isUpcoming(s.date))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    setSeminars(upcoming);
+  } catch (error) {
+    console.error("Failed to fetch seminars:", error);
+  }
+};
+ fetchSeminars();
+}, []);
 
   return (
     <div className="homepage">
@@ -238,11 +228,11 @@ const HomePage = () => {
                 No seminars are scheduled right now. Please check back soon.
               </p>
             ) : (
-              <div className="seminars-grid">
-                {(showAllSeminars ? seminars : seminars.slice(0, 6)).map((seminar, index) => (
-                  <SeminarCard key={seminar._id || index} {...seminar} />
-                ))}
-              </div>
+             <div className="sm-list">
+                 {(showAllSeminars ? seminars : seminars.slice(0, 6)).map((seminar, index) => (
+                <SeminarCard key={seminar._id || index} {...seminar} />
+                 ))}
+           </div>
             )}
 
             {seminars.length > 6 && (

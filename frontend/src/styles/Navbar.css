@@ -1,3 +1,151 @@
+/* ===== Profile menu ===== */
+.navbar-menu > .nb-profile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  list-style: none;
+}
+
+.nb-avatar-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  line-height: 0;
+  font-family: inherit;
+}
+
+.nb-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3f6f1e, #274e02);
+  color: #b2de4a;
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1;
+  border: 2px solid #b2de4a;
+  box-shadow: 0 2px 8px rgba(39, 78, 2, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.nb-avatar-btn:hover .nb-avatar {
+  transform: scale(1.06);
+  box-shadow: 0 4px 12px rgba(39, 78, 2, 0.4);
+}
+.nb-avatar-btn:focus-visible .nb-avatar {
+  outline: 3px solid #e6b734;
+  outline-offset: 2px;
+}
+.nb-avatar-lg {
+  width: 52px;
+  height: 52px;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.nb-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  width: 270px;
+  background: #ffffff;
+  border: 1px solid #dfe7c9;
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
+  padding: 8px;
+  z-index: 1000;
+  text-align: left;
+  animation: nb-pop 0.15s ease-out;
+}
+@keyframes nb-pop {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.nb-menu-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 6px;
+  background: #eef3df;
+  border-radius: 12px;
+}
+.nb-head-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nb-head-text strong {
+  color: #274e02;
+  font-size: 0.98rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nb-head-text span {
+  color: #5f6b5a;
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nb-role {
+  align-self: flex-start;
+  margin-top: 4px;
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #274e02;
+  background: #b2de4a;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* The longer selector beats the old ".navbar-menu li a" link styles */
+.navbar-menu .nb-menu .nb-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 0;
+  background: none;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.93rem;
+  font-weight: 500;
+  color: #263228;
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+  position: static;
+  transition: background-color 0.15s ease;
+}
+.navbar-menu .nb-menu .nb-item::after { content: none; }
+.navbar-menu .nb-menu .nb-item:hover { background: #eef3df; color: #274e02; }
+.navbar-menu .nb-menu .nb-logout { color: #b42318; }
+.navbar-menu .nb-menu .nb-logout:hover { background: #fef3f2; color: #b42318; }
+
+@media (max-width: 768px) {
+  .nb-menu {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    animation: none;
+    max-width: calc(100vw - 24px);
+  }
+}
 .navbar-sust {
   position: fixed;
   top: 0;
@@ -87,40 +235,6 @@
   width: 100%;
 }
 
-.login-but {
-  background-color: #e6b734;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(37, 42, 46, 0.2);
-}
-
-.login-but:hover {
-  background-color: #f0ee8f;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 8px rgba(44, 62, 80, 0.2);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .navbar-container {
-    flex-direction: column;
-    padding: 1rem;
-  }
-
-  .navbar-logo {
-    margin-bottom: 1rem;
-  }
-
-  .navbar-menu {
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .university-name {
-    text-align: center;
-    font-size: 1.5rem;
-  }
+.navbar-menu li a.active {
+  color: #e69934;
 }
