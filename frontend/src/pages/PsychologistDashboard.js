@@ -1621,13 +1621,13 @@ const handleSendMessage = async () => {
   </div>
 );        
 
- const renderSeminars = () => {
+  const renderSeminars = () => {
   // compute “today midnight”
   const today = new Date()
   today.setHours(0,0,0,0)
 
   // filter out past seminars
-  const upcoming = seminars.filter(s => new Date(s.date) >= today)
+  const upcoming = (Array.isArray(seminars) ? seminars : []).filter(s => new Date(s.date) >= today)
 
   return (
     <div className="seminars-section">
