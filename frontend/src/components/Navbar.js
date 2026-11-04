@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import { LayoutDashboard, LogOut } from 'lucide-react';
+import { LayoutDashboard, LogOut,ArrowLeft } from 'lucide-react';
 import '../styles/Navbar.css';
 import sustLogo from '../images/sust- logo.png';
 
@@ -68,12 +68,12 @@ const Navbar = () => {
   return (
     <nav className="navbar-sust">
       <div className="navbar-container">
-        <div className="navbar-logo">
-          <div className="logo-box">
-            <img src={sustLogo} alt="SUST Logo" className="sust-logo" />
-          </div>
-          <span className="university-name">Shahjalal University of Science and Technology</span>
+        <Link to="/" className="navbar-logo" aria-label="Home">
+        <div className="logo-box">
+             <img src={sustLogo} alt="SUST Logo" className="sust-logo" />
         </div>
+        <span className="university-name">Shahjalal University of Science and Technology</span>
+       </Link>
 
         <ul className="navbar-menu">
           <li><Link to="/resources">Resources</Link></li>
@@ -121,7 +121,11 @@ const Navbar = () => {
                     type="button"
                     className="nb-item nb-logout"
                     role="menuitem"
-                    onClick={handleLogout}
+                     onClick={() => {
+      if (window.confirm("Are you sure you want to log out?")) {
+        handleLogout();
+      }
+    }}
                   >
                     <LogOut size={16} /> Log out
                   </button>

@@ -1,4 +1,4 @@
-"use client"
+import { useNavigate } from "react-router-dom"
 
 import { useState, useEffect } from "react"
 import api from "../utils/api"
@@ -7,18 +7,15 @@ import { toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import { ToastContainer } from "react-toastify"
 
-import { FaSignOutAlt, FaEnvelope, FaUserMd, FaUsers, FaUser } from "react-icons/fa"
+import { FaSignOutAlt, FaEnvelope, FaUserMd, FaUsers, FaUser,FaHome } from "react-icons/fa"
 
 const AdminDashboard = () => {
+  const navigate = useNavigate()
   const handleLogout = () => {
-    // Remove the token from local storage.
-    // The token might be stored under different keys, so we'll clear the most common ones.
-    localStorage.removeItem("token")
-    localStorage.removeItem("userInfo") // If you store user info separately
-
-    // Redirect to the login page
-    window.location.href = "/login"
-  }
+  localStorage.clear()
+  sessionStorage.clear()
+  window.location.replace("/login")
+}
 
   const [users, setUsers] = useState([])
   const [psychologists, setPsychologists] = useState([])
@@ -909,6 +906,9 @@ const AdminDashboard = () => {
           </div>
         )}
         <div className="sidebar">
+         <button onClick={() => navigate("/")}>
+            <FaHome /> Home
+          </button>
           <button
             className={activeTab === "psychologists" ? "active" : ""}
             onClick={() => setActiveTab("psychologists")}
@@ -924,7 +924,11 @@ const AdminDashboard = () => {
           <button className={activeTab === "profile" ? "active" : ""} onClick={() => setActiveTab("profile")}>
             <FaUser /> Profile
           </button>
-          <button className="logout-butto" onClick={handleLogout}>
+          <button className="logout-butto"  onClick={() => {
+      if (window.confirm("Are you sure you want to log out?")) {
+        handleLogout();
+      }
+    }}>
             <FaSignOutAlt /> Logout
           </button>
         </div>

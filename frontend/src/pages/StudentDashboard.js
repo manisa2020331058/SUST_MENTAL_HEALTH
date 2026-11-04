@@ -21,6 +21,7 @@ import {
   FaPuzzlePiece,
   FaSignOutAlt,
   FaKey,
+  FaHome
 } from "react-icons/fa"
 import api from "../utils/api"
 import "../styles/studentDashboard.css"
@@ -138,15 +139,10 @@ const SplineViewer = ({ url, className = "spline-viewer", modelType = "" }) => {
 const StudentDashboard = () => {
 
   const handleLogout = () => {
-    // Remove the token from local storage.
-    // The token might be stored under different keys, so we'll clear the most common ones.
-    localStorage.removeItem("token")
-    localStorage.removeItem("userInfo") // If you store user info separately
-
-    // Redirect to the login page
-    window.location.href = "/login"
-  }
-
+  localStorage.clear()
+  sessionStorage.clear()
+ window.location.replace("/login")
+}
 
   // UI State
   const [activeSection, setActiveSection] = useState("dashboard")
@@ -1290,6 +1286,11 @@ const handleToggleChat = () => {
       {/* Sidebar Navigation */}
       <nav className="dashboard-nav">
         <ul>
+          <li>
+                   <button onClick={() => (window.location.href = '/')}>
+                    <FaHome /> Home
+                   </button>
+                  </li>
           <li className={activeSection === "dashboard" ? "active" : ""}>
             <button onClick={() => setActiveSection("dashboard")}>
               <FaChartLine /> Dashboard

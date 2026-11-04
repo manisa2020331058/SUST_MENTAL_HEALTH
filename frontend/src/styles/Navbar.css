@@ -238,3 +238,4 @@
 .navbar-menu li a.active {
   color: #e69934;
 }
+a.navbar-logo { text-decoration: none; color: inherit; }

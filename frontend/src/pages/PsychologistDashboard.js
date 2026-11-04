@@ -18,7 +18,8 @@ import {
   FaAngleUp,
   FaHistory,
   FaNotesMedical,
-  FaSignOutAlt
+  FaSignOutAlt,
+  FaHome
 } from 'react-icons/fa';
 import '../styles/PsychologistDashboard.css';
 import api from '../utils/api';
@@ -61,14 +62,10 @@ const PsychologistDashboard = () => {
 
 
 const handleLogout = () => {
-    // Remove the token from local storage.
-    // The token might be stored under different keys, so we'll clear the most common ones.
-    localStorage.removeItem("token")
-    localStorage.removeItem("userInfo") // If you store user info separately
-
-    // Redirect to the login page
-    window.location.href = "/login"
-  }
+  localStorage.clear()
+  sessionStorage.clear()
+  window.location.replace("/login")
+}
 
   // UI State
   const [activeSection, setActiveSection] = useState('overview');
@@ -281,8 +278,53 @@ const fetchSessions = useCallback(async () => {
   }
 }, []); // No dependencies as it uses local state setters
 
+// Shared loading indicator: a spinner plus a short message
+const PdLoading = ({ text = 'Loading…', fullScreen = false, inline = false }) => (
+  <div
+    className={`pd-loading${fullScreen ? ' pd-loading-fullscreen' : ''}${inline ? ' pd-loading-inline' : ''}`}
+    role="status"
+    aria-live="polite"
+  >
+    <div className="pd-loading-spinner" aria-hidden="true" />
+    <p className="pd-loading-text">{text}</p>
+  </div>
+);
+// ---- Helpers for the WhatsApp-style Messages page ----
+const sameDay = (a, b) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
+
+// Time shown in the chat list: "14:05", "Yesterday", or "12 Nov"
+const listTime = (value) => {
+  if (!value) return '';
+  const d = new Date(value);
+  if (isNaN(d)) return '';
+  const now = new Date();
+  if (sameDay(d, now)) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (sameDay(d, yesterday)) return 'Yesterday';
+  return d.toLocaleDateString([], { day: 'numeric', month: 'short' });
+};
+
+// Label for the divider between days inside a conversation
+const dayLabel = (value) => {
+  const d = new Date(value);
+  if (isNaN(d)) return '';
+  const now = new Date();
+  if (sameDay(d, now)) return 'Today';
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (sameDay(d, yesterday)) return 'Yesterday';
+  return d.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+};
+
+// The sender can be an id or a populated object; always return the id as text
+const senderIdOf = (msg) => String(msg.sender?._id || msg.sender);
 // Fetch available time slots when date changes
 // Fetch available time slots when date changes
+
 const fetchAvailableTimeSlots = async (date) => {
   if (!date) {
     console.warn('No date provided to fetchAvailableTimeSlots');
@@ -1236,7 +1278,7 @@ const handleSendMessage = async () => {
             <div className="form-group">
               <label>Available Time Slots</label>
               {loading ? (
-                <p>Loading available time slots...</p>
+                <PdLoading inline text="Loading available time slots…" />
               ) : availableTimeSlots.length > 0 ? (
                 <div className="time-slots-container">
                   {availableTimeSlots.map((slot, index) => (
@@ -1884,94 +1926,161 @@ const renderSeminars = () => {
 
   
  const renderMessages = () => {
-  const filteredStudents = students.filter(s =>
-    s.personalInfo.name.toLowerCase().includes(chatSearch.toLowerCase())
-  );
+  const query = chatSearch.toLowerCase();
+
+  // Chat list: newest conversation first (like WhatsApp).
+  // Students with no messages yet go last, in A to Z order.
+  const chatList = students
+    .filter((s) => (s.personalInfo?.name || '').toLowerCase().includes(query))
+    .map((s) => {
+      const thread = messages[s.userId] || [];
+      return { student: s, thread, last: thread[thread.length - 1] };
+    })
+    .sort((a, b) => {
+      const ta = a.last ? new Date(a.last.timestamp).getTime() || 0 : 0;
+      const tb = b.last ? new Date(b.last.timestamp).getTime() || 0 : 0;
+      if (ta !== tb) return tb - ta;
+      return (a.student.personalInfo?.name || '').localeCompare(b.student.personalInfo?.name || '');
+    });
+
+  const activeThread = activeChat ? messages[activeChat.userId] || [] : [];
+  const activeName = activeChat?.personalInfo?.name || 'Student';
+  const draft = activeChat ? drafts[activeChat.userId] || '' : '';
 
   return (
-    <div className="messages-section">
-      {/* LEFT: Student List */}
-      <div className="students-list">
-        <h3>Student Conversations</h3>
+    <div className={`wa-shell${activeChat ? ' wa-chat-open' : ''}`}>
+      {/* LEFT: chat list */}
+      <aside className="wa-sidebar">
+        <header className="wa-sidebar-head">
+          <h3>Chats</h3>
+        </header>
 
-        {/* ✅ Search Box inserted carefully */}
-        <div className="chat-search">
-          <FaSearch className="search-icon" />
+        <div className="wa-search">
+          <FaSearch className="wa-search-icon" />
           <input
             type="text"
-            placeholder="Search students..."
+            placeholder="Search students"
             value={chatSearch}
-            onChange={e => setChatSearch(e.target.value)}
-            className="search-input"
+            onChange={(e) => setChatSearch(e.target.value)}
           />
         </div>
 
-        {/* ✅ Map filtered students only */}
-        {filteredStudents.map(student => {
-          const thread = messages[student.userId] || [];
-          const unreadCount = thread.filter(
-            m => !m.read && String(m.sender._id || m.sender) === String(student.userId)
-          ).length;
+        <div className="wa-chat-list">
+          {chatList.length === 0 && <p className="wa-list-empty">No students found</p>}
 
-          return (
-            <div
-              key={student.userId}
-              className={`student-chat-item ${activeChat?.userId === student.userId ? 'active' : ''}`}
-              onClick={() => setActiveChat(student)}
-            >
-              <div className="student-info">
-                <h4>{student.personalInfo.name}</h4>
-                <p>{student.academicInfo.department}</p>
-              </div>
-              {unreadCount > 0 && <span className="unread-badge">{unreadCount}</span>}
-            </div>
-          );
-        })}
-      </div>
+          {chatList.map(({ student, thread, last }) => {
+            const name = student.personalInfo?.name || 'Student';
+            const unreadCount = thread.filter(
+              (m) => !m.read && senderIdOf(m) === String(student.userId)
+            ).length;
+            const preview = last
+              ? `${senderIdOf(last) === String(meId) ? 'You: ' : ''}${last.content || ''}`
+              : student.academicInfo?.department || '';
 
-      {/* RIGHT: Chat Area */}
-      <div className="chat-area">
+            return (
+              <button
+                type="button"
+                key={student.userId}
+                className={`wa-chat-item${activeChat?.userId === student.userId ? ' active' : ''}`}
+                onClick={() => setActiveChat(student)}
+              >
+                <span className="wa-avatar">{name.charAt(0).toUpperCase()}</span>
+                <span className="wa-chat-main">
+                  <span className="wa-chat-top">
+                    <span className="wa-chat-name">{name}</span>
+                    {last && (
+                      <span className={`wa-chat-time${unreadCount > 0 ? ' unread' : ''}`}>
+                        {listTime(last.timestamp)}
+                      </span>
+                    )}
+                  </span>
+                  <span className="wa-chat-bottom">
+                    <span className="wa-chat-preview">{preview}</span>
+                    {unreadCount > 0 && <span className="wa-unread">{unreadCount}</span>}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </aside>
+
+      {/* RIGHT: conversation */}
+      <section className="wa-conversation">
         {!activeChat ? (
-          <div className="no-chat-selected">Select a student to start chatting</div>
+          <div className="wa-empty">
+            <div className="wa-empty-icon">
+              <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.6-.8L3 21l1.9-5.1A8.4 8.4 0 1 1 21 11.5z" />
+              </svg>
+            </div>
+            <h3>Your student conversations</h3>
+            <p>Select a student from the list to start chatting.</p>
+          </div>
         ) : (
           <>
-            <div className="chat-header">
-              <h3>{activeChat.personalInfo.name}</h3>
-              <p>
-                {activeChat.academicInfo.department} -{' '}
-                {activeChat.academicInfo.registrationNumber}
-              </p>
-            </div>
+            <header className="wa-conv-head">
+              <button
+                type="button"
+                className="wa-back"
+                onClick={() => setActiveChat(null)}
+                aria-label="Back to chats"
+              >
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              <span className="wa-avatar">{activeName.charAt(0).toUpperCase()}</span>
+              <div className="wa-conv-title">
+                <strong>{activeName}</strong>
+                <span>
+                  {activeChat.academicInfo?.department}
+                  {activeChat.academicInfo?.registrationNumber
+                    ? ` · ${activeChat.academicInfo.registrationNumber}`
+                    : ''}
+                </span>
+              </div>
+            </header>
 
-            <div className="chat-messages">
-              {(messages[activeChat.userId] || []).map(msg => {
-                const senderId = msg.sender._id ? msg.sender._id : msg.sender;
-                const fromMe = String(senderId) === String(meId);
+            <div className="wa-thread">
+              {activeThread.flatMap((msg, i) => {
+                const fromMe = senderIdOf(msg) === String(meId);
+                const prev = activeThread[i - 1];
+                const showDay = !prev || !sameDay(new Date(prev.timestamp), new Date(msg.timestamp));
+                const startsGroup = showDay || senderIdOf(prev) !== senderIdOf(msg);
+                const key = msg._id || i;
 
-                return (
+                const nodes = [];
+                if (showDay) {
+                  nodes.push(
+                    <div key={`day-${key}`} className="wa-day">
+                      <span>{dayLabel(msg.timestamp)}</span>
+                    </div>
+                  );
+                }
+                nodes.push(
                   <div
-                    key={msg._id}
-                    className={`message ${fromMe ? 'sent' : 'received'}`}
+                    key={key}
+                    className={`wa-msg ${fromMe ? 'sent' : 'received'}${startsGroup ? ' first' : ''}`}
                   >
-                    <div className="message-header">
-                      {fromMe ? 'You' : activeChat.personalInfo.name}
-                    </div>
-                    <div className="message-content">{msg.content}</div>
-                    <div className="message-time">
-                      {new Date(msg.timestamp).toLocaleTimeString()}
-                    </div>
+                    <span className="wa-msg-text">{msg.content}</span>
+                    <span className="wa-msg-time">
+                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
                 );
+                return nodes;
               })}
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="chat-input">
+            <div className="wa-composer">
               <textarea
-                value={drafts[activeChat.userId] || ''}
+                rows={1}
+                value={draft}
                 onChange={handleDraftChange}
-                placeholder="Type your message…"
-                onKeyDown={e => {
+                placeholder="Type a message"
+                onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     handleSendMessage();
@@ -1979,22 +2088,31 @@ const renderSeminars = () => {
                 }}
               />
               <button
+                type="button"
+                className="wa-send"
                 onClick={handleSendMessage}
-                disabled={!(drafts[activeChat.userId] || '').trim()}
+                disabled={!draft.trim()}
+                aria-label="Send message"
               >
-                Send
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                </svg>
               </button>
             </div>
           </>
         )}
-      </div>
+      </section>
     </div>
   );
 };
-
   const renderSidebar = () => (
     <nav className="dashboard-nav">
       <ul>
+        <li>
+         <button onClick={() => (window.location.href = '/')}>
+          <FaHome /> Home
+         </button>
+        </li>
         <li className={activeSection === 'overview' ? 'active' : ''}>
           <button onClick={() => setActiveSection('overview')}>
             <FaChartLine /> Overview
@@ -2090,7 +2208,13 @@ const renderSeminars = () => {
               </button>
             </li>
           <li className="logout-butto">
-            <button onClick={handleLogout}>
+            <button 
+                onClick={() => {
+                        if (window.confirm("Are you sure you want to log out?")) {
+                             handleLogout();
+                         }
+                 }}
+             > 
               <FaSignOutAlt /> Logout
             </button>
           </li>
@@ -2105,7 +2229,7 @@ const renderSeminars = () => {
           </div>
         )}
         
-        {loading && <div className="loading-spinner">Loading...</div>}
+        {loading && < pd-loading />}
         
         {!loading && (
           <>

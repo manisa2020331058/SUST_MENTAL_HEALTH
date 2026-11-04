@@ -169,8 +169,9 @@
 
 
 // src/components/LoginPage.js
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
+import { useNavigate,Link } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa'; // Using react-icons for icons
 import sustLogo from '../images/sust- logo.png';
 import backgroundImage from '../images/sust_bg3.jpg';
@@ -185,7 +186,24 @@ const LoginPage = () => {
   const [focusedField, setFocusedField] = useState('');
 
   const navigate = useNavigate();
-
+  // Already logged in? Skip the form and go to the right dashboard.
+useEffect(() => {
+  try {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    const { exp } = jwtDecode(token);
+    const target = {
+      admin: '/admin-dashboard',
+      psychologist: '/psychologist',
+      student: '/student-dashboard',
+    }[role];
+    if (target && (!exp || exp * 1000 > Date.now())) {
+      navigate(target, { replace: true });
+    }
+  } catch {
+    // no valid token: stay on the login page
+  }
+}, [navigate]);
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -232,13 +250,13 @@ const LoginPage = () => {
       // Navigation
       switch (data.role) {
         case 'admin':
-          navigate('/admin-dashboard');
+          navigate('/admin-dashboard',{ replace: true });
           break;
         case 'psychologist':
-          navigate('/psychologist');
+          navigate('/psychologist',{ replace: true });
           break;
         case 'student':
-          navigate('/student-dashboard');
+          navigate('/student-dashboard',{ replace: true });
           break;
         default:
           setError('Unknown user role');
@@ -302,7 +320,7 @@ const LoginPage = () => {
     border: '1px solid rgba(255, 255, 255, 0.3)',
     animation: 'slideUp 0.8s ease-out'
   };
-
+  
   const headerStyle = {
     textAlign: 'center',
     marginBottom: '40px'

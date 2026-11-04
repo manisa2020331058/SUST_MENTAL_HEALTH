@@ -10,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Resources from './pages/Resources.js';
 import { ChatProvider } from './contexts/ChatContext';
 import StudentProfile from './pages/StudentProfile.jsx';
+import ProtectedRoute from './components/ProtectedRoute';
 const App = () => {
   return (
     <Router>
@@ -22,6 +23,10 @@ const App = () => {
         <Route path="/psychologist" element={<PsychologistDashboard />} />
         <Route path="/student-dashboard" element={<StudentDashboard />} />
         <Route path="/psychologist/viewstudent/:studentId" element={<StudentProfile />} />
+        <Route path="/admin-dashboard" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/psychologist" element={<ProtectedRoute role="psychologist"><PsychologistDashboard /></ProtectedRoute>} />
+        <Route path="/student-dashboard" element={<ProtectedRoute role="student"><StudentDashboard /></ProtectedRoute>} />
+        <Route path="/psychologist/viewstudent/:studentId" element={<ProtectedRoute role="psychologist"><StudentProfile /></ProtectedRoute>} />
       </Routes>
       <ToastContainer 
         position="top-right"

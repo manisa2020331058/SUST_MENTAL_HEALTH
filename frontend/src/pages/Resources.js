@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { FaBook, FaPodcast, FaSearch, FaExternalLinkAlt } from 'react-icons/fa';
 import '../styles/Resources.css';
+import Navbar from '../components/Navbar';
 
 // RSS summaries can contain HTML tags; show plain text only
 const clean = (text = '') =>
@@ -54,6 +55,7 @@ const Resources = () => {
 
   return (
     <div className="rs-page">
+      <Navbar />
       <header className="rs-hero">
         <h1>Mental Health Resources</h1>
         <p>Articles and podcasts to help you understand, cope and grow.</p>
