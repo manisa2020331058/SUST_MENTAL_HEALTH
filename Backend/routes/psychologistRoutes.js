@@ -100,8 +100,8 @@ router.get('/getSessions/:psychologistId', protect, psychologistOnly, async (req
 
     //console.log('Fetched sessions:', sessions.length);
     if (sessions.length === 0) {
-      return res.status(404).json({ message: 'No sessions found for this psychologist' });
-    }
+       return res.status(200).json([]);
+   }
 
     const formattedSessions = await Promise.all(
       sessions.map(async (session, index) => {
