@@ -87,6 +87,7 @@ const handleLogout = () => {
   const [pastSessions, setPastSessions] = useState([]);
   const [students, setStudents] = useState([]);
   const [seminars, setSeminars] = useState([]);
+  const [seminarView, setSeminarView] = useState('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
   const [newSeminar, setNewSeminar] = useState({
     title: '',
@@ -841,7 +842,7 @@ useEffect(() => {
   }
 
   const handleDeleteSeminar = async (id) => {
-    if (!window.confirm('Delete this seminar?')) return
+    if (!window.confirm('Delete this seminar? This cannot be undone.')) return;
     try {
       setLoading(true)
       await api.seminars.delete(id)
@@ -1621,13 +1622,28 @@ const handleSendMessage = async () => {
   </div>
 );        
 
-  const renderSeminars = () => {
-  // compute “today midnight”
-  const today = new Date()
-  today.setHours(0,0,0,0)
+const renderSeminars = () => {
+  // Compare calendar days as text (YYYY-MM-DD) so time zones can't shift a seminar by a day
+  const pad = (n) => String(n).padStart(2, '0');
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const dayOf = (s) => String(s.date).slice(0, 10);
 
-  // filter out past seminars
-  const upcoming = (Array.isArray(seminars) ? seminars : []).filter(s => new Date(s.date) >= today)
+  const all = Array.isArray(seminars) ? seminars : [];
+  const upcoming = all
+    .filter((s) => dayOf(s) >= todayStr)
+    .sort((a, b) => dayOf(a).localeCompare(dayOf(b))); // soonest first
+  const past = all
+    .filter((s) => dayOf(s) < todayStr)
+    .sort((a, b) => dayOf(b).localeCompare(dayOf(a))); // most recent first
+
+  const showingHistory = seminarView === 'history';
+  const list = showingHistory ? past : upcoming;
+
+  const participantCount = (s) =>
+    Array.isArray(s.registeredParticipants)
+      ? s.registeredParticipants.length
+      : s.registeredParticipants || 0;
 
   return (
     <div className="seminars-section">
@@ -1636,7 +1652,7 @@ const handleSendMessage = async () => {
       {!showModal && (
         <>
           <div className="seminars-header">
-            <h2>Upcoming Mental Health Seminars</h2>
+            <h2>{showingHistory ? 'Seminar History' : 'Upcoming Mental Health Seminars'}</h2>
             <button
               className="add-seminar-btn"
               onClick={() => setShowModal(true)}
@@ -1645,18 +1661,35 @@ const handleSendMessage = async () => {
             </button>
           </div>
 
+          <div className="sh-tabs">
+            <button
+              type="button"
+              className={`sh-tab ${!showingHistory ? 'active' : ''}`}
+              onClick={() => setSeminarView('upcoming')}
+            >
+              Upcoming ({upcoming.length})
+            </button>
+            <button
+              type="button"
+              className={`sh-tab ${showingHistory ? 'active' : ''}`}
+              onClick={() => setSeminarView('history')}
+            >
+              History ({past.length})
+            </button>
+          </div>
+
           <div className="seminars-list">
-            {upcoming.length > 0 ? (
+            {list.length > 0 ? (
               <div className="seminar-cards">
-                {upcoming.map((s) => (
-                  <div key={s._id} className="seminar-card">
+                {list.map((s) => (
+                  <div key={s._id} className={`seminar-card ${showingHistory ? 'is-past' : ''}`}>
                     <h4>{s.title}</h4>
                     <p>{s.description}</p>
                     <div className="seminar-details">
-                      <p><strong>Date:</strong> {new Date(s.date).toLocaleDateString()}</p>
+                      <p><strong>Date:</strong> {new Date(s.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}</p>
                       <p><strong>Time:</strong> {s.time}</p>
                       <p><strong>Location:</strong> {s.location}</p>
-                      <p><strong>Participants:</strong> {s.registeredParticipants}/{s.maxParticipants}</p>
+                      <p><strong>Participants:</strong> {participantCount(s)}/{s.maxParticipants}</p>
                     </div>
                     <button
                       className="delete-button"
@@ -1668,12 +1701,11 @@ const handleSendMessage = async () => {
                 ))}
               </div>
             ) : (
-              <p>No upcoming seminars</p>
+              <p>{showingHistory ? 'No past seminars yet' : 'No upcoming seminars'}</p>
             )}
           </div>
         </>
       )}
-
       {/* MODAL: only render when showModal === true */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>

@@ -1425,3 +1425,129 @@
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, var(--accent-muted), var(--accent-deeper));
 }
+/* ===== Seminar history tabs ===== */
+.sh-tabs {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 20px;
+  flex-wrap: wrap;
+}
+.sh-tab {
+  padding: 9px 18px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #334155;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sh-tab:hover { border-color: #0f766e; }
+.sh-tab.active {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #ffffff;
+}
+.seminar-card.is-past { opacity: 0.85; }
+.seminar-card.is-past h4::after {
+  content: "Completed";
+  margin-left: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #475569;
+  background: #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+/* ===== Dashboard seminars: card grid ===== */
+.seminars-section .seminars-list { display: block; }
+
+.seminars-section .seminar-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.seminars-section .seminar-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.seminars-section .seminar-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+}
+
+.seminars-section .seminar-card h4 {
+  margin: 0;
+  padding-right: 40px;           /* room for the delete button */
+  font-size: 1.15rem;
+  line-height: 1.35;
+  color: #0f172a;
+}
+
+.seminars-section .seminar-card > p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #475569;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Details: small labels above values, pushed to the bottom */
+.seminars-section .seminar-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  margin-top: auto;
+  padding: 14px 0 0;
+  border-top: 1px solid #eef2f6;
+}
+.seminars-section .seminar-details p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+.seminars-section .seminar-details strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+/* Delete: quiet until hovered */
+.seminars-section .delete-button {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.seminars-section .delete-button:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
