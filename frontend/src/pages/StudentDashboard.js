@@ -1,5 +1,6 @@
 "use client"
-
+import { useNavigate, useSearchParams } from "react-router-dom"
+import { splitSeminars } from "../utils/seminarHelpers"
 import { useState, useEffect, useRef, Suspense } from "react"
 import {
   FaCommentDots,
@@ -136,6 +137,7 @@ const SplineViewer = ({ url, className = "spline-viewer", modelType = "" }) => {
 }
 
 // Add state for articles and podcasts
+const SECTIONS = ["dashboard", "playzone", "resources", "seminars", "resetPassword"]
 const StudentDashboard = () => {
 
   const handleLogout = () => {
@@ -145,7 +147,13 @@ const StudentDashboard = () => {
 }
 
   // UI State
-  const [activeSection, setActiveSection] = useState("dashboard")
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabFromUrl = searchParams.get("tab")
+  const activeSection = SECTIONS.includes(tabFromUrl) ? tabFromUrl : "dashboard"
+// replace: true updates the current history entry instead of adding one per click
+  const setActiveSection = (section) => setSearchParams({ tab: section }, { replace: true })
+
   const [selectedGame, setSelectedGame] = useState("3d-robot")
 
   const [userId, setUserId] = useState(null)
@@ -187,6 +195,8 @@ const StudentDashboard = () => {
   const [psychologists, setPsychologists] = useState([])
   const [seminars, setSeminars] = useState([])
   const [showAllSeminars, setShowAllSeminars] = useState(false)
+  const [seminarView, setSeminarView] = useState("upcoming")
+  const [seminarSearch, setSeminarSearch] = useState("")
   const [loading, setLoading] = useState(false)
 
   // New state for articles and podcasts
@@ -452,7 +462,7 @@ const handleToggleChat = () => {
     const fetchSeminars = async () => {
       try {
         const response = await api.get("/seminars")
-        setSeminars(response.data)
+        setSeminars(Array.isArray(response.data) ? response.data : [])
       } catch (error) {
         console.error("Failed to fetch seminars:", error)
       }
@@ -1000,27 +1010,7 @@ const handleToggleChat = () => {
   )
 
   const renderResources = () => {
-    const serviceDetails = [
-      {
-        image: individualCounselingIcon,
-        title: "Individual Counseling",
-        description: "Personalized one-on-one support for students",
-        category: "Support",
-      },
-      {
-        image: workshopsIcon,
-        title: "Mental Health Seminars",
-        description: "Educational workshops and awareness programs",
-        category: "Education",
-      },
-      {
-        image: stressManagementIcon,
-        title: "Mental Wellness Resources",
-        description: "Comprehensive support materials and guides",
-        category: "Information",
-      },
-    ]
-
+  
     // Filter articles based on search term
     const filteredArticles = articles.filter(
       (article) =>
@@ -1030,41 +1020,9 @@ const handleToggleChat = () => {
 
     return (
       <div className="resources-section">
-        <h2>Mental Health Resources</h2>
+       
 
-        <div className="services-content">
-          <div className="services-grid">
-            {serviceDetails.map((service, index) => (
-              <div key={index} className="service-card">
-                <div className="service-image-wrapper">
-                  <img src={service.image || "/placeholder.svg"} alt={service.title} className="service-image" />
-                  <div className="service-overlay">
-                    <h3>{service.title}</h3>
-                    <p>{service.description}</p>
-                    <span className="service-category">{service.category}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="psychologists-section">
-          <h2>Meet Our Psychologists</h2>
-          <Suspense fallback={<div className="loading-grid">Loading...</div>}>
-            <div className="psychologist-grid">
-              {psychologists.map((psych) => (
-                <PsychologistCard
-                  key={psych._id}
-                  name={psych.personalInfo.name}
-                  specialization={psych.professionalInfo.specialization}
-                  image={psych.personalInfo.profileImage}
-                />
-              ))}
-            </div>
-          </Suspense>
-        </div>
-
+      
         {/* Articles Section */}
         <div className="articles-section">
           <h2>Mental Health Articles</h2>
@@ -1144,15 +1102,72 @@ const handleToggleChat = () => {
     )
   }
 
-  const renderSeminars = () => (
-    <div className="seminars-section">
-      <h2>Upcoming Mental Health Seminars</h2>
-      <div className="seminars-grid">
-        {(showAllSeminars ? seminars : seminars.slice(0, 6)).map((seminar, index) => (
-          <SeminarCard key={index} {...seminar} />
-        ))}
+ const renderSeminars = () => {
+  const { upcoming, past } = splitSeminars(seminars, seminarSearch)
+  const showingHistory = seminarView === "history"
+  const list = showingHistory ? past : upcoming
+  const visible = showAllSeminars ? list : list.slice(0, 6)
+
+  const switchTab = (view) => {
+    setSeminarView(view)
+    setShowAllSeminars(false)
+  }
+
+  return (
+    <div className="sd-seminars">
+      <h2>Mental Health Seminars</h2>
+
+      <div className="sd-toolbar">
+        <div className="sd-tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!showingHistory}
+            className={`sd-tab${!showingHistory ? " active" : ""}`}
+            onClick={() => switchTab("upcoming")}
+          >
+            Upcoming ({upcoming.length})
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={showingHistory}
+            className={`sd-tab${showingHistory ? " active" : ""}`}
+            onClick={() => switchTab("history")}
+          >
+            History ({past.length})
+          </button>
+        </div>
+
+        <div className="sd-search">
+          <FaSearch className="sd-search-icon" />
+          <input
+            type="text"
+            placeholder="Search seminars"
+            value={seminarSearch}
+            onChange={(e) => setSeminarSearch(e.target.value)}
+            aria-label="Search seminars"
+          />
+        </div>
       </div>
-      {seminars.length > 6 && (
+
+      {visible.length === 0 ? (
+        <p className="sd-empty">
+          {seminarSearch
+            ? "No seminars match your search."
+            : showingHistory
+              ? "No past seminars yet."
+              : "No upcoming seminars right now."}
+        </p>
+      ) : (
+        <div className="seminars-grid">
+          {visible.map((seminar, index) => (
+            <SeminarCard key={seminar._id || index} {...seminar} />
+          ))}
+        </div>
+      )}
+
+      {list.length > 6 && (
         <div className="see-more-container">
           <button className="see-more-button" onClick={() => setShowAllSeminars(!showAllSeminars)}>
             {showAllSeminars ? "See Less" : "See More"}
@@ -1161,7 +1176,7 @@ const handleToggleChat = () => {
       )}
     </div>
   )
-
+}
   const handlePasswordReset = async () => {
     if (newPassword !== confirmPassword) {
       setMessage("❌ Passwords do not match.")
@@ -1261,14 +1276,14 @@ const handleToggleChat = () => {
         return renderDashboard()
     }
   }
-
-  if (isLoading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-      </div>
-    )
-  }
+if (isLoading) {
+  return (
+    <div className="sd-loading" role="status" aria-live="polite">
+      <div className="sd-loading-spinner" aria-hidden="true" />
+      <p className="sd-loading-text">Loading your dashboard…</p>
+    </div>
+  )
+}
 
   if (error) {
     return (
@@ -1286,11 +1301,11 @@ const handleToggleChat = () => {
       {/* Sidebar Navigation */}
       <nav className="dashboard-nav">
         <ul>
-          <li>
-                   <button onClick={() => (window.location.href = '/')}>
-                    <FaHome /> Home
-                   </button>
-                  </li>
+             <li>
+              <button onClick={() => navigate("/")}>
+                <FaHome /> Home
+              </button>                 
+             </li>
           <li className={activeSection === "dashboard" ? "active" : ""}>
             <button onClick={() => setActiveSection("dashboard")}>
               <FaChartLine /> Dashboard

@@ -1462,15 +1462,15 @@
   vertical-align: middle;
 }
 /* ===== Dashboard seminars: card grid ===== */
-.seminars-section .seminars-list { display: block; }
+.psychologist-dashboard .seminars-section .seminars-list { display: block; }
 
-.seminars-section .seminar-cards {
+.psychologist-dashboard .seminars-section .seminar-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
 }
 
-.seminars-section .seminar-card {
+.psychologist-dashboard .seminars-section .seminar-card {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1482,12 +1482,12 @@
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
-.seminars-section .seminar-card:hover {
+.psychologist-dashboard .seminars-section .seminar-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
 }
 
-.seminars-section .seminar-card h4 {
+.psychologist-dashboard .seminars-section .seminar-card h4 {
   margin: 0;
   padding-right: 40px;           /* room for the delete button */
   font-size: 1.15rem;
@@ -1495,7 +1495,7 @@
   color: #0f172a;
 }
 
-.seminars-section .seminar-card > p {
+.psychologist-dashboard .seminars-section .seminar-card > p {
   margin: 0;
   font-size: 0.92rem;
   line-height: 1.6;
@@ -1507,7 +1507,7 @@
 }
 
 /* Details: small labels above values, pushed to the bottom */
-.seminars-section .seminar-details {
+.psychologist-dashboard .seminars-section .seminar-details {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px 16px;
@@ -1515,12 +1515,12 @@
   padding: 14px 0 0;
   border-top: 1px solid #eef2f6;
 }
-.seminars-section .seminar-details p {
+.psychologist-dashboard .seminars-section .seminar-details p {
   margin: 0;
   font-size: 0.9rem;
   color: #0f172a;
 }
-.seminars-section .seminar-details strong {
+.psychologist-dashboard .seminars-section .seminar-details strong {
   display: block;
   margin-bottom: 2px;
   font-size: 0.68rem;
@@ -1531,7 +1531,7 @@
 }
 
 /* Delete: quiet until hovered */
-.seminars-section .delete-button {
+.psychologist-dashboard .seminars-section .delete-button {
   position: absolute;
   top: 14px;
   right: 14px;
@@ -1547,7 +1547,7 @@
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.seminars-section .delete-button:hover {
+.psychologist-dashboard .seminars-section .delete-button:hover {
   background: #fef2f2;
   color: #dc2626;
 }

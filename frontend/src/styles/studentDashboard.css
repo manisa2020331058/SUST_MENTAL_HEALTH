@@ -1966,26 +1966,21 @@
   z-index: 1000;
 }
 
+
 /* ResetPassword.css */
 
 .reset-password-container {
-  max-width: 400px;
-  margin: 60px auto;
-  padding: 30px 25px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-/* ResetPassword.css */
-
-.reset-password-container {
+  width: 100%;
   max-width: 420px;
+  box-sizing: border-box;
+
   margin: 60px auto;
   padding: 35px 30px;
+
   background: #f9fafc;
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+
   font-family: 'Segoe UI', sans-serif;
   transition: all 0.3s ease-in-out;
 }
@@ -1996,7 +1991,11 @@
   margin-bottom: 25px;
   font-weight: 600;
 }
-
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 .form-group {
   margin-bottom: 20px;
 }
@@ -2080,4 +2079,129 @@
     margin: 30px 16px;
     padding: 25px 20px;
   }
+}
+
+/* ---------- Loading screen ---------- */
+.sd-loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: #fafbfc;
+  color: #64748b;
+}
+.sd-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 4px solid #e6f1f6;
+  border-top-color: #2f6f8f;
+  animation: sd-spin 0.8s linear infinite;
+}
+.sd-loading-text {
+  margin: 0;
+  font-size: 0.95rem;
+}
+@keyframes sd-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-loading-spinner { animation-duration: 2.4s; }
+}
+
+/* ---------- Seminars page ---------- */
+.sd-seminars {
+  --sd-accent: #2f6f8f;
+  --sd-ink: #0f172a;
+  --sd-muted: #64748b;
+  --sd-line: #e2e8f0;
+  padding: 1rem 0;
+}
+.sd-seminars h2 {
+  margin: 0 0 20px;
+  color: var(--sd-ink);
+}
+
+.sd-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.sd-tabs {
+  display: flex;
+  gap: 10px;
+}
+.sd-tab {
+  padding: 9px 18px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.sd-tab:hover { border-color: var(--sd-accent); }
+.sd-tab.active {
+  background: var(--sd-accent);
+  border-color: var(--sd-accent);
+  color: #ffffff;
+}
+
+.sd-search {
+  position: relative;
+  flex: 1 1 260px;
+  max-width: 360px;
+}
+.sd-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  color: #94a3b8;
+  pointer-events: none;
+}
+.sd-search input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px 10px 38px;
+  border: 1px solid var(--sd-line);
+  border-radius: 999px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--sd-ink);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.sd-search input:focus {
+  border-color: var(--sd-accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 143, 0.14);
+}
+
+.sd-empty {
+  padding: 40px 0;
+  text-align: center;
+  color: var(--sd-muted);
+}
+
+/* Scoped under .sd-seminars so the home page's ".seminars-grid" rule
+   (a fixed 3 columns) cannot override this one. */
+.sd-seminars .seminars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .sd-search { max-width: none; flex-basis: 100%; }
+  .sd-seminars .seminars-grid { grid-template-columns: 1fr; }
 }

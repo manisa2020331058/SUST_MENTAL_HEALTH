@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, useRef, useEffect ,useCallback} from 'react';
 import { User, Mail, Phone, MapPin, GraduationCap, Calendar, Camera, UserCheck } from 'lucide-react';
 import { 
